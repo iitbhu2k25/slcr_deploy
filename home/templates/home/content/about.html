@@ -1,0 +1,492 @@
+{% extends 'home/content/home_static.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    body {
+        font-family: 'Roboto', 'Arial', sans-serif;
+        color: #333;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+    }
+
+    .main-container {
+        max-width: 1140px;
+        margin: 0 auto;
+        background: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Header with national colors */
+    .page-header {
+        background: linear-gradient(to right, #FF9933, #FFFFFF, #138808);
+        padding: 15px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .page-header::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 1;
+    }
+
+    .govt-logo {
+        max-width: 80px;
+        margin-bottom: 10px;
+    }
+
+    .ministry-title {
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #555;
+        margin: 0;
+    }
+
+    .page-title {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 2.2em;
+        font-weight: bold;
+        color: #00008B;
+        margin: 10px 0;
+    }
+
+    /* Breadcrumb navigation */
+    .breadcrumb {
+        background-color: #f0f0f0;
+        padding: 10px 20px;
+        font-size: 0.9em;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .breadcrumb a {
+        color: #0066CC;
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    .breadcrumb span {
+        color: #666;
+        margin: 0 5px;
+    }
+
+    /* Content area */
+    .content-area {
+        padding: 30px 20px;
+    }
+
+    .content-box {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .content-title {
+        font-family: 'Times New Roman', Times, serif;
+        color: #00008B;
+        font-size: 1.5em;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #ddd;
+    }
+
+    .content-paragraph {
+        color: #333;
+        font-size: 1em;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+
+    /* List styles */
+    .govt-list {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    .govt-list li {
+        margin-bottom: 10px;
+        padding-left: 5px;
+    }
+
+    /* Table styles */
+    .govt-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+
+    .govt-table th {
+        background-color: #00008B;
+        color: white;
+        padding: 10px;
+        text-align: left;
+        font-weight: normal;
+    }
+
+    .govt-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .govt-table tr:nth-child(even) {
+        background-color: #f5f5f5;
+    }
+
+    /* Official notice box */
+    .official-notice {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0066CC;
+        padding: 15px;
+        margin: 20px 0;
+        font-size: 0.95em;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        background: #f0f0f0;
+        padding: 20px;
+        border: 1px solid #ddd;
+    }
+
+    .sidebar-title {
+        font-family: 'Times New Roman', Times, serif;
+        color: #00008B;
+        font-size: 1.2em;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .related-links {
+        list-style: none;
+        padding: 0;
+    }
+
+    .related-links li {
+        padding: 8px 0;
+        border-bottom: 1px dotted #ccc;
+    }
+
+    .related-links a {
+        color: #0066CC;
+        text-decoration: none;
+    }
+
+    .related-links a:hover {
+        text-decoration: underline;
+    }
+
+    /* Footer */
+    .page-footer {
+        background-color: #00008B;
+        color: white;
+        padding: 20px;
+        font-size: 0.9em;
+    }
+
+    .footer-content {
+        max-width: 1140px;
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .footer-section {
+        flex: 1;
+        min-width: 200px;
+        margin-right: 20px;
+        margin-bottom: 20px;
+    }
+
+    .footer-heading {
+        font-size: 1.1em;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 8px;
+    }
+
+    .footer-links a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+    }
+
+    .footer-links a:hover {
+        color: white;
+        text-decoration: underline;
+    }
+
+    .copyright-bar {
+        background-color: #000066;
+        color: rgba(255,255,255,0.7);
+        text-align: center;
+        padding: 10px;
+        font-size: 0.85em;
+    }
+
+    /* Grid system */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+    }
+
+    .col-8 {
+        flex: 0 0 66.666667%;
+        max-width: 66.666667%;
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+    .col-4 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+    /* Document button style */
+    .document-button {
+        display: inline-block;
+        padding: 8px 15px;
+        background-color: #0066CC;
+        color: white;
+        text-decoration: none;
+        border-radius: 3px;
+        font-size: 0.9em;
+        transition: background-color 0.3s;
+    }
+
+    .document-button:hover {
+        background-color: #00478f;
+    }
+
+    .document-button i {
+        margin-right: 5px;
+    }
+
+    /* Certificate of authenticity */
+    .certificate {
+        border: 1px solid #ddd;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="%23000066" stroke-width="1" opacity="0.05"/></svg>') center center;
+        padding: 15px;
+        margin: 20px 0;
+        position: relative;
+    }
+
+    .certificate::after {
+        content: "";
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="%23000066" stroke-width="1"/><text x="50" y="50" font-family="Arial" font-size="8" fill="%23000066" text-anchor="middle" alignment-baseline="middle">OFFICIAL</text></svg>');
+        width: 100px;
+        height: 100px;
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        opacity: 0.1;
+    }
+
+    .certificate p {
+        margin: 0 0 10px 0;
+    }
+
+    /* Media queries for responsiveness */
+    @media (max-width: 768px) {
+        .col-8, .col-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .footer-section {
+            flex: 0 0 100%;
+            margin-right: 0;
+        }
+
+        .page-title {
+            font-size: 1.8em;
+        }
+    }
+</style>
+
+<div class="main-container">
+    <!-- Main content area with sidebar -->
+    <div class="content-area">
+        <div class="row">
+            <div class="col-8">
+                <!-- Introduction section -->
+                <div class="content-box">
+                    <h2 class="content-title">Introduction</h2>
+                    <p class="content-paragraph">
+                        This project addresses the critical need for a comprehensive Decision Support System (DSS) to manage water resources effectively. The DSS integrates sophisticated models and simulations to support sustainable water governance, ultimately contributing to the achievement of Sustainable Development Goals (SDGs).
+                    </p>
+                    <p class="content-paragraph">
+                        Water governance is a complex, multi-dimensional challenge exacerbated by climate change, urban expansion, and socio-economic dynamics. The aim of this DSS is to provide holistic solutions to water management by combining hydrological, socio-economic, and ecological factors through an integrated modeling framework.
+                    </p>
+                    <div class="official-notice">
+                        <strong>Official Notice:</strong> This initiative is in accordance with the National Water Policy and adheres to guidelines set forth by the Ministry of Jal Shakti, Government of India.
+                    </div>
+                </div>
+
+                <!-- Objectives section -->
+                <div class="content-box">
+                    <h2 class="content-title">Project Objectives</h2>
+                    <ul class="govt-list">
+                        <li>Development of a Data Management Framework to handle large-scale, multi-source water data.</li>
+                        <li>Design of an Integrated Hydro-Computational Modeling Framework to simulate water behaviors.</li>
+                        <li>Creation of a Graphical User Interface (GUI) for simplified decision-making and visual data representation.</li>
+                        <li>Implementation of a stakeholder engagement platform to facilitate inclusive water governance.</li>
+                        <li>Development of policy recommendation modules adapted to changing environmental conditions.</li>
+                    </ul>
+                    <p class="content-paragraph">
+                        The above objectives are aligned with the National Water Mission and aim to enhance water resource management capabilities throughout India.
+                    </p>
+                </div>
+
+                <!-- Applications section -->
+                <div class="content-box">
+                    <h2 class="content-title">Potential Applications</h2>
+                    <table class="govt-table">
+                        <thead>
+                            <tr>
+                                <th>Application Area</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Drought Management</td>
+                                <td>Early warning systems and resource allocation optimization during water scarcity conditions.</td>
+                            </tr>
+                            <tr>
+                                <td>Flood Prevention</td>
+                                <td>Real-time monitoring and predictive modeling to mitigate flooding risks in vulnerable areas.</td>
+                            </tr>
+                            <tr>
+                                <td>Groundwater Management</td>
+                                <td>Sustainable utilization strategies based on recharge rates, extraction patterns, and contamination risks.</td>
+                            </tr>
+                            <tr>
+                                <td>Urban Water Supply</td>
+                                <td>Optimization of distribution networks, leakage detection, and demand forecasting for growing urban centers.</td>
+                            </tr>
+                            <tr>
+                                <td>Agricultural Water</td>
+                                <td>Precision irrigation scheduling and crop water requirement modeling to maximize agricultural productivity.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Collaborations section -->
+                <div class="content-box">
+                    <h2 class="content-title">Key Collaborations</h2>
+                    <p class="content-paragraph">
+                        This DSS works in alignment with national water projects including:
+                    </p>
+                    <ul class="govt-list">
+                        <li><strong>Jal Jeevan Mission:</strong> Supporting the aim of providing safe drinking water to all households.</li>
+                        <li><strong>Atal Bhujal Yojana:</strong> Enhancing groundwater management through community participation.</li>
+                        <li><strong>National Hydrological Project:</strong> Improving the accessibility of water resources information.</li>
+                        <li><strong>National Groundwater Management Improvement Program-2:</strong> Supporting sustainable groundwater management.</li>
+                    </ul>
+                    <p class="content-paragraph">
+                        By integrating these missions' goals into our system, we aim to enhance India's water resource management capabilities.
+                    </p>
+                </div>
+
+                <!-- Technology section -->
+                <div class="content-box">
+                    <h2 class="content-title">Technological Framework</h2>
+                    <p class="content-paragraph">
+                        The DSS utilizes advanced data from sources such as:
+                    </p>
+                    <ul class="govt-list">
+                        <li>Central Water Commission (CWC) monitoring stations</li>
+                        <li>India Meteorological Department (IMD) weather forecasts</li>
+                        <li>Satellite imagery from NASA's MODIS and Sentinel satellites</li>
+                        <li>Ground-level monitoring through IoT sensor networks</li>
+                    </ul>
+                    <p class="content-paragraph">
+                        By combining these data sources and applying system thinking methodologies, the DSS facilitates informed, effective decision-making at multiple levels of water governance.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Sidebar with related information -->
+            <div class="col-4">
+                <div class="sidebar">
+                    <h3 class="sidebar-title">Documents</h3>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <a href="/confident" class="document-button">
+                            <i>&#128196;</i> View All Documents
+                        </a>
+                    </div>
+
+                    <h3 class="sidebar-title">Related Schemes</h3>
+                    <ul class="related-links">
+                        <li><a href="#">Jal Jeevan Mission</a></li>
+                        <li><a href="#">Atal Bhujal Yojana</a></li>
+                        <li><a href="#">Namami Gange Programme</a></li>
+                        <li><a href="#">National Rural Drinking Water Programme</a></li>
+                    </ul>
+
+                    <h3 class="sidebar-title">Important Links</h3>
+                    <ul class="related-links">
+                        <li><a href="#">Ministry of Jal Shakti</a></li>
+                        <li><a href="#">Central Water Commission</a></li>
+                        <li><a href="#">Central Ground Water Board</a></li>
+                        <li><a href="#">National Water Mission</a></li>
+                        <li><a href="#">India Meteorological Department</a></li>
+                    </ul>
+
+                    <h3 class="sidebar-title">Contact Information</h3>
+                    <address style="font-style: normal; line-height: 1.6;">
+                        <strong>Smart Laboratory for Clean Rivers (SLCR)</strong><br>
+                        Department of Civil Engineering,<br>
+                        Indian Institute of Technology (BHU)<br>
+                        Varanasi 221005<br>
+                        <br>
+                        Email: dssiitbhu@gmail.com<br>
+                        Phone: +91-11-XXXXXXXX
+                    </address>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% include 'footer.html' %}
+{% endblock content %}
