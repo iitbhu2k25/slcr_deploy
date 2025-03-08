@@ -305,10 +305,7 @@
                 <span>No Basemap</span>
               </button>
             </div>
-          </div>
-
-          <!-- Map Legend -->
-          
+          </div>        
 
           <!-- Map Container -->
           <div id="map" class="leaflet-map"></div>
@@ -2210,7 +2207,7 @@ function addLegend(breaks, colors, categoryNames) {
       div.innerHTML +=
         '<div style="display: flex; align-items: center; margin-bottom: 5px;">' +
         `<i style="background: ${colors[i]}; width: 18px; height: 18px; display: inline-block; margin-right: 8px; border: 1px solid #555;"></i>` +
-        `<span><strong>${categoryNames[i]}</strong> (${fromValue} - ${toValue})</span>` +
+        `<span><strong>${categoryNames[i]}</strong></span>` +
         '</div>';
     }
 
