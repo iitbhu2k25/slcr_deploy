@@ -10,8 +10,16 @@ from django.db.models import Q
 
 
 def project_population_arithmetic(state_code, district_code, subdistrict_code, result, village_2011_population, base_year, projection_method, target_year, target_year_range):
+    print(f"Hello i am  inside project_population_arithmetic")
+    state_code = int(state_code)
+    district_code = int(district_code)
+    subdistrict_code = int(subdistrict_code)
+    print(f"state_code {state_code}")
+    print(f"district_code {district_code}")
+    print(f"subdistrict_code {subdistrict_code}")
+    print(f"village_2011_population {village_2011_population}")
     population_1951_to_2011 = []
-    print(f"Hello iam  inside project_population")
+   
     if state_code and district_code and subdistrict_code:
         query = PopulationDataYear.objects.filter(
             state_code=state_code, district_code=district_code, subdistrict_code=subdistrict_code
@@ -27,7 +35,7 @@ def project_population_arithmetic(state_code, district_code, subdistrict_code, r
         else:
             print("No data found for the given state, district, and subdistrict codes.")
             return
-    
+    print(f"population_1951_to_2011 {population_1951_to_2011}")
     if len(population_1951_to_2011) < 7:
         print("Insufficient data for population projection.")
         return
@@ -829,6 +837,7 @@ def calculate_projection(request):
             district_code = data.get('district')
             subdistrict_code = data.get('subdistrict')
             villages = data.get('villages', [])
+            persistentSelection = data.get('persistentSelection')
             base_year = data.get('baseYear')
             projection_method = data.get('projectionMethod')
             target_year = data.get('targetYear')
@@ -839,6 +848,7 @@ def calculate_projection(request):
             print(f"district = {district_code}")
             print(f"subdistrict = {subdistrict_code}")
             print(f"villages = {villages}")
+            print(f"persistentSelection = {persistentSelection}")
             print(f"base_year = {base_year}")
             print(f"projection_method = {projection_method}")
             print(f"target_year = {target_year}")
@@ -1271,94 +1281,187 @@ def calculate_projection(request):
                 return JsonResponse({'success': True, 'result': result})
         
 
-            village_2011_population = {}
-            village_subdistrict_mapping = {}
+            # village_2011_population = {}
+            # village_subdistrict_mapping = {}
 
-            if len(villages) > 0:  # Example: village-2636726
-                village_codes = [int(village.split('-')[1]) for village in villages]
+            # if len(villages) > 0:  # Example: village-2636726
+            #     village_codes = [int(village.split('-')[1]) for village in villages]
 
-                if 0 in village_codes and len(villages)==1:
-                    # Fetch data using subdistrict_code directly from frontend
-                    query_2011_village_population = PopulationData.objects.filter(
-                        state_code=state_code,
-                        district_code=district_code,
-                        subdistrict_code=subdistrict_code,  # Directly use provided subdistrict_code
-                        village_code =0
-                    ).values('village_code', 'population_2011', 'subdistrict_code')
+            #     if 0 in village_codes and len(villages)==1:
+            #         # Fetch data using subdistrict_code directly from frontend
+            #         query_2011_village_population = PopulationData.objects.filter(
+            #             state_code=state_code,
+            #             district_code=district_code,
+            #             subdistrict_code=subdistrict_code,  # Directly use provided subdistrict_code
+            #             village_code =0
+            #         ).values('village_code', 'population_2011', 'subdistrict_code')
 
-                else:
-                    # Fetch data using village_code if village_code != 0
-                    query_2011_village_population = PopulationData.objects.filter(
-                        state_code=state_code,
-                        district_code=district_code,
-                        village_code__in=village_codes
-                    ).values('village_code', 'population_2011', 'subdistrict_code')
+            #     else:
+            #         # Fetch data using village_code if village_code != 0
+            #         query_2011_village_population = PopulationData.objects.filter(
+            #             state_code=state_code,
+            #             district_code=district_code,
+            #             village_code__in=village_codes
+            #         ).values('village_code', 'population_2011', 'subdistrict_code')
 
-                # Map population data and subdistrict mapping
-                village_2011_population = {item['village_code']: item['population_2011'] for item in query_2011_village_population}
-                village_subdistrict_mapping = {item['village_code']: item['subdistrict_code'] for item in query_2011_village_population}
+            #     # Map population data and subdistrict mapping
+            #     village_2011_population = {item['village_code']: item['population_2011'] for item in query_2011_village_population}
+            #     village_subdistrict_mapping = {item['village_code']: item['subdistrict_code'] for item in query_2011_village_population}
 
 
-            # Now `village_subdistrict_mapping` contains:
-            # {village_code: subdistrict_code}
+            # # Now `village_subdistrict_mapping` contains:
+            # # {village_code: subdistrict_code}
 
-            print(f"village_subdistrict_mapping = {village_subdistrict_mapping}")
-            print(f"village_2011_population= {village_2011_population}")
+            # print(f"village_subdistrict_mapping = {village_subdistrict_mapping}")
+            # print(f"village_2011_population= {village_2011_population}")
 
-            grouped_by_subdistrict = {}
+            # grouped_by_subdistrict = {}
 
-            for village_code, subdistrict_code in village_subdistrict_mapping.items():
-                population = village_2011_population.get(village_code, 0)
+            # for village_code, subdistrict_code in village_subdistrict_mapping.items():
+            #     population = village_2011_population.get(village_code, 0)
 
-                if subdistrict_code not in grouped_by_subdistrict:
-                    grouped_by_subdistrict[subdistrict_code] = {}
+            #     if subdistrict_code not in grouped_by_subdistrict:
+            #         grouped_by_subdistrict[subdistrict_code] = {}
 
-                grouped_by_subdistrict[subdistrict_code][village_code] = population
+            #     grouped_by_subdistrict[subdistrict_code][village_code] = population
 
-            print(f"grouped_by_subdistricts {grouped_by_subdistrict}")
+            # print(f"grouped_by_subdistricts {grouped_by_subdistrict}")
             
             
             
             result = {}
 
             if projection_method == "arithmetic-increase":
-                for key,value in grouped_by_subdistrict.items():
-                    project_population_arithmetic(state_code,district_code,key, result, value, base_year, projection_method, target_year, target_year_range )
+                    for key, value in persistentSelection.items():
+                        subdis_code = persistentSelection[key]['subdistrictCode']
 
-                print(f"result_arithmetic_after_modi = {result}")    
-                      
-                
+                        if str(subdis_code) == '0':  # Ensure comparison is with a string if needed
+                            print("oming inss")
+                            # Fetch the subdistrict code from the database
+                            subdis_code_queryset = PopulationData.objects.filter(
+                                state_code=persistentSelection[key]['stateCode'],
+                                district_code=persistentSelection[key]['districtCode'],
+                                village_code=key
+                            ).values('subdistrict_code')
+
+                            # Check if the queryset has results and extract the value
+                            if subdis_code_queryset.exists():
+                                subdis_code = subdis_code_queryset[0]['subdistrict_code']
+                            else:
+                                print(f"No subdistrict code found for village code {key}")
+                                continue
+
+                        project_population_arithmetic(
+                            persistentSelection[key]['stateCode'],
+                            persistentSelection[key]['districtCode'],
+                            subdis_code,
+                            result,
+                            {key: persistentSelection[key]['population']},
+                            base_year,
+                            projection_method,
+                            target_year,
+                            target_year_range
+                        )
+
+                    print(f"result_arithmetic_after_modi_arth = {result}")
+                    
+                    
+                    
             elif projection_method == "geometric-increase":
-                for key,value in grouped_by_subdistrict.items():
-                    project_population_geometric(state_code,district_code,key, result, value, base_year, projection_method, target_year, target_year_range )
+                for key, value in persistentSelection.items():
+                    subdis_code = persistentSelection[key]['subdistrictCode']
+                    if str(subdis_code) == '0':  # Ensure comparison is with a string if needed
+                        print("oming inss")
+                        # Fetch the subdistrict code from the database
+                        subdis_code_queryset = PopulationData.objects.filter(
+                            state_code=persistentSelection[key]['stateCode'],
+                            district_code=persistentSelection[key]['districtCode'],
+                            village_code=key
+                        ).values('subdistrict_code')
 
-                print(f"result_geometric_after_modi = {result}")   
-                
-
+                        # Check if the queryset has results and extract the value
+                        if subdis_code_queryset.exists():
+                            subdis_code = subdis_code_queryset[0]['subdistrict_code']
+                        else:
+                            print(f"No subdistrict code found for village code {key}")
+                            continue
+                    project_population_geometric(persistentSelection[key]['stateCode'],persistentSelection[key]['districtCode'],subdis_code,result,{key:persistentSelection[key]['population']}, base_year, projection_method, target_year, target_year_range)
+                print(f"result_arithmetic_after_modi_geom = {result}")
+              
 
             elif projection_method == 'logistic-growth':
-                for key,value in grouped_by_subdistrict.items():
-                    project_population_logistic(state_code,district_code,key, result, value, base_year, projection_method, target_year, target_year_range )
+                for key, value in persistentSelection.items():
+                    subdis_code = persistentSelection[key]['subdistrictCode']
+                    if str(subdis_code) == '0':  # Ensure comparison is with a string if needed
+                        print("oming inss")
+                        # Fetch the subdistrict code from the database
+                        subdis_code_queryset = PopulationData.objects.filter(
+                            state_code=persistentSelection[key]['stateCode'],
+                            district_code=persistentSelection[key]['districtCode'],
+                            village_code=key
+                        ).values('subdistrict_code')
 
-                print(f"result_logi_after_modi = {result}")  
+                        # Check if the queryset has results and extract the value
+                        if subdis_code_queryset.exists():
+                            subdis_code = subdis_code_queryset[0]['subdistrict_code']
+                        else:
+                            print(f"No subdistrict code found for village code {key}")
+                            continue
+                    project_population_logistic(persistentSelection[key]['stateCode'],persistentSelection[key]['districtCode'],subdis_code,result,{key:persistentSelection[key]['population']}, base_year, projection_method, target_year, target_year_range)
+                print(f"result_arithmetic_after_modi_logi = {result}")
+               
                 
 
 
             elif projection_method == 'incremental-growth':
-                for key,value in grouped_by_subdistrict.items():
-                    project_population_incremental(state_code,district_code,key, result, value, base_year, projection_method, target_year, target_year_range )
+                for key, value in persistentSelection.items():
+                    subdis_code = persistentSelection[key]['subdistrictCode']
 
-                print(f"result_Incre_after_modi = {result}")  
+                    if str(subdis_code) == '0':  # Ensure comparison is with a string if needed
+                        print("oming inss")
+                        # Fetch the subdistrict code from the database
+                        subdis_code_queryset = PopulationData.objects.filter(
+                            state_code=persistentSelection[key]['stateCode'],
+                            district_code=persistentSelection[key]['districtCode'],
+                            village_code=key
+                        ).values('subdistrict_code')
+
+                        # Check if the queryset has results and extract the value
+                        if subdis_code_queryset.exists():
+                            subdis_code = subdis_code_queryset[0]['subdistrict_code']
+                        else:
+                            print(f"No subdistrict code found for village code {key}")
+                            continue
+                    project_population_incremental(persistentSelection[key]['stateCode'],persistentSelection[key]['districtCode'],subdis_code,result,{key:persistentSelection[key]['population']}, base_year, projection_method, target_year, target_year_range)
+                print(f"result_arithmetic_after_modi_increm = {result}")
+             
                 
                 
 
           
 
             elif projection_method == 'exponential-growth':
-                for key,value in grouped_by_subdistrict.items():
-                    project_population_exponential(state_code,district_code,key, result, value, base_year, projection_method, target_year, target_year_range )
+                for key, value in persistentSelection.items():
+                    subdis_code = persistentSelection[key]['subdistrictCode']
 
-                print(f"result_Expo_after_modi = {result}") 
+                    if str(subdis_code) == '0':  # Ensure comparison is with a string if needed
+                        print("oming inss")
+                        # Fetch the subdistrict code from the database
+                        subdis_code_queryset = PopulationData.objects.filter(
+                            state_code=persistentSelection[key]['stateCode'],
+                            district_code=persistentSelection[key]['districtCode'],
+                            village_code=key
+                        ).values('subdistrict_code')
+
+                        # Check if the queryset has results and extract the value
+                        if subdis_code_queryset.exists():
+                            subdis_code = subdis_code_queryset[0]['subdistrict_code']
+                        else:
+                            print(f"No subdistrict code found for village code {key}")
+                            continue
+                    project_population_exponential(persistentSelection[key]['stateCode'],persistentSelection[key]['districtCode'],subdis_code,result,{key:persistentSelection[key]['population']}, base_year, projection_method, target_year, target_year_range)
+                print(f"result_arithmetic_after_modi = {result}")
+               
                 
 
             else:
@@ -1368,3 +1471,4 @@ def calculate_projection(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+

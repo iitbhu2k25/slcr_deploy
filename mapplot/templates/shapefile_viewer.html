@@ -344,6 +344,94 @@
   </div>
 </div>
 
+<!-- this is for union large model html -->
+ <!-- Large Modal -->
+ <div class="modal fade bd-example-modal-lg" id="unionModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+          <div class="drag-handle-left"></div>
+          <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="myLargeModalLabel">Union Analysis Tool</h5>
+              <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close" onclick="$('#unionModal').modal('hide');">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+              
+          </div>
+          <div class="modal-body">
+              <div class="union-tool-container">
+                  <div class="alert alert-info">
+                      <i class="fas fa-info-circle"></i> 
+                      Union analysis combines multiple layers into a single layer, preserving all features and attributes.
+                  </div>
+
+                  <!-- Layer Selection Section -->
+                  <div class="layer-selection mb-4">
+                      <h6><strong>Select Layers for Union:</strong></h6>
+                      <div id="layerList" class="layer-list mb-3" style="max-height: 200px; overflow-y: auto;">
+                          <!-- Layers will be populated here -->
+                      </div>
+
+                      <!-- Shapefile Upload -->
+                      <div class="input-group mb-3">
+                          <div class="custom-file">
+                              <input type="file" class="custom-file-input" id="shapefileUpload" accept=".shp,.zip">
+                              <label class="custom-file-label" for="shapefileUpload">Upload Shapefile (.shp or .zip)</label>
+                          </div>
+                          <div class="input-group-append">
+                              <button class="btn btn-outline-primary" type="button" id="uploadShapefileBtn" style="margin-left: 5px;">Upload</button>
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Existing Categories Section -->
+                  <div class="existing-categories mb-4">
+                      <h6><strong>Existing Categories:</strong></h6>
+                      <select id="categorySelect2" class="form-control">
+                          <option value="" selected disabled>Select a category</option>
+                          <option value="roads">Roads</option>
+                          <option value="buildings">Buildings</option>
+                          <option value="water">Water Bodies</option>
+                      </select>
+                  </div>
+
+                  <!-- Output Settings -->
+                  <div class="form-group mb-3">
+                      <label for="unionOutputName"><strong>Output Layer Name:</strong></label>
+                      <input type="text" id="unionOutputName" class="form-control" placeholder="Enter name for the union result">
+                  </div>
+
+                  <div class="form-check mb-3">
+                      <input type="checkbox" class="form-check-input" id="unionKeepAttributes" checked>
+                      <label class="form-check-label" for="unionKeepAttributes">Keep all attributes from selected layers</label>
+                  </div>
+
+                  <div class="mt-3">
+                      <button id="performUnion" class="btn btn-primary">
+                          <i class="fas fa-object-group"></i> Perform Union
+                      </button>
+                      <button id="clearUnionSelection" class="btn btn-secondary" style="margin-top:10px;">
+                          <i class="fas fa-undo"></i> Clear Selection
+                      </button>
+                  </div>
+
+                  <div id="unionResult" class="mt-4" style="display: none;">
+                      <div class="alert alert-success">
+                          <i class="fas fa-check-circle"></i> Union operation completed successfully!
+                      </div>
+                      <div class="union-stats">
+                          <h6>Result Statistics:</h6>
+                          <ul id="unionStats">
+                              <!-- Statistics will be populated here -->
+                          </ul>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          
+      </div>
+  </div>
+</div>
+
 {% endblock %} {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
@@ -359,9 +447,41 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+
+<!-- Leaflet Draw (for drawing tools) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<link rel="stylesheet" href="../dist/Leaflet.BigImage.min.css">
+<script src="../static/dist/Leaflet.BigImage.min.css"></script>
+<script src="../static/dist/Leaflet.BigImage.min.js"></script>
+
+<!-- end of union large model   -->
+<!-- Required scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="dist/Leaflet.BigImage.min.css">
+<script src="dist/Leaflet.BigImage.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+    $('.modal-dialog').draggable({
+        handle: ".modal-header"
+    });
+    $('.modal-header').css('cursor', 'move');
+  });
+  </script>
+
 <script>
 
-  // Global variables
+
+
+// Global variables
   let map;
   let currentLayer = null;
   let activeFeature = null;
@@ -391,12 +511,18 @@
     industries: ["all"],
     stps: ["all"],
   };
+  
+  
 
   // Initialize map
   function initMap() {
     map = L.map("map", {
-      zoomControl: false, // We'll add our own zoom controls
-    }).setView([22.3511, 78.6677], 4); // Centered on India
+        zoomControl: false,
+    }).setView([22.3511, 78.6677], 4);
+    
+    //console.log("Map initialized:", map); // Check if map is correctly assigned
+
+// Centered on India
 
     // Basemap Layers
     baseLayers = {
@@ -440,6 +566,7 @@
             maxZoom: 19,
           }
         ),
+       
         L.tileLayer(
           "https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png",
           {
@@ -456,9 +583,11 @@
         attribution: "No basemap",
       }),
     };
-
+    
     // Add default basemap
-    baseLayers.traffic.addTo(map);
+    baseLayers.streets.addTo(map);
+
+    // L.control.bigImage({position: 'bottomleft'}).addTo(map);
 
     // Add Scale Control
     L.control
@@ -467,6 +596,7 @@
         position: "bottomleft",
       })
       .addTo(map);
+      
 
     // Initialize drawing tools
     const drawnItems = new L.FeatureGroup();
@@ -518,10 +648,9 @@
     });
 
     // Initialize coordinate grid if enabled
-    if (document.getElementById("grid-toggle").checked) {
-      addCoordinateGrid();
-    }
-
+    // if (document.getElementById("grid-toggle").checked) {
+    //   addCoordinateGrid();
+    // }
     // Handle drawing events
     map.on(L.Draw.Event.CREATED, function (event) {
       const layer = event.layer;
@@ -581,70 +710,71 @@
     });
   }
 
-  // Function to add coordinate grid lines
-  function addCoordinateGrid() {
-    // Clear previous grid lines
-    gridLines.forEach((line) => {
-      if (map.hasLayer(line)) {
-        map.removeLayer(line);
-      }
-    });
-    gridLines = [];
 
-    // Latitude lines (every 5 degrees)
-    for (let lat = 5; lat <= 40; lat += 5) {
-      const line = L.polyline(
-        [
-          [lat, 65],
-          [lat, 100],
-        ],
-        {
-          color: "#3498db",
-          weight: 1,
-          opacity: 0.5,
-          dashArray: "5,5",
-        }
-      ).addTo(map);
+  // // Function to add coordinate grid lines
+  // function addCoordinateGrid() {
+  //   // Clear previous grid lines
+  //   gridLines.forEach((line) => {
+  //     if (map.hasLayer(line)) {
+  //       map.removeLayer(line);
+  //     }
+  //   });
+  //   gridLines = [];
 
-      const label = L.marker([lat, 65], {
-        icon: L.divIcon({
-          className: "coordinate-label",
-          html: `${lat}°N`,
-          iconSize: [40, 20],
-          iconAnchor: [0, 10],
-        }),
-      }).addTo(map);
+  //   // Latitude lines (every 5 degrees)
+  //   for (let lat = 5; lat <= 40; lat += 5) {
+  //     const line = L.polyline(
+  //       [
+  //         [lat, 65],
+  //         [lat, 100],
+  //       ],
+  //       {
+  //         color: "#3498db",
+  //         weight: 1,
+  //         opacity: 0.5,
+  //         dashArray: "5,5",
+  //       }
+  //     ).addTo(map);
 
-      gridLines.push(line, label);
-    }
+  //     const label = L.marker([lat, 65], {
+  //       icon: L.divIcon({
+  //         className: "coordinate-label",
+  //         html: `${lat}°N`,
+  //         iconSize: [40, 20],
+  //         iconAnchor: [0, 10],
+  //       }),
+  //     }).addTo(map);
 
-    // Longitude lines (every 5 degrees)
-    for (let lng = 65; lng <= 100; lng += 5) {
-      const line = L.polyline(
-        [
-          [5, lng],
-          [40, lng],
-        ],
-        {
-          color: "#3498db",
-          weight: 1,
-          opacity: 0.5,
-          dashArray: "5,5",
-        }
-      ).addTo(map);
+  //     gridLines.push(line, label);
+  //   }
 
-      const label = L.marker([5, lng], {
-        icon: L.divIcon({
-          className: "coordinate-label",
-          html: `${lng}°E`,
-          iconSize: [40, 20],
-          iconAnchor: [20, -5],
-        }),
-      }).addTo(map);
+  //   // Longitude lines (every 5 degrees)
+  //   for (let lng = 65; lng <= 100; lng += 5) {
+  //     const line = L.polyline(
+  //       [
+  //         [5, lng],
+  //         [40, lng],
+  //       ],
+  //       {
+  //         color: "#3498db",
+  //         weight: 1,
+  //         opacity: 0.5,
+  //         dashArray: "5,5",
+  //       }
+  //     ).addTo(map);
 
-      gridLines.push(line, label);
-    }
-  }
+  //     const label = L.marker([5, lng], {
+  //       icon: L.divIcon({
+  //         className: "coordinate-label",
+  //         html: `${lng}°E`,
+  //         iconSize: [40, 20],
+  //         iconAnchor: [20, -5],
+  //       }),
+  //     }).addTo(map);
+
+  //     gridLines.push(line, label);
+  //   }
+  // }
 
   // Function for showing notifications
   function showNotification(title, message, type = "success") {
@@ -714,23 +844,28 @@
         feature &&
         feature.properties &&
         (feature.geometry.type === "Polygon" ||
+          feature.geometry.type === "MultiPoint" ||
+          feature.geometry.type === "Point" ||
           feature.geometry.type === "MultiPolygon" ||
           feature.geometry.type === "LineString" ||
           feature.geometry.type === "MultiLineString")
       ) {
         const center = layer.getBounds().getCenter();
         const labelText =
+          feature.properties.dtname ||
+          feature.properties.Name ||
           feature.properties.name ||
           feature.properties.NAME ||
           feature.properties.id ||
           feature.properties.ID ||
-          "Unnamed";
+          feature.properties.STATE ||
+          "X";
 
         const label = L.divIcon({
           className: "map-label",
           html: `<div>${labelText}</div>`,
-          iconSize: [100, 40],
-          iconAnchor: [50, 20],
+          iconSize: [70, 20],
+          iconAnchor: [25, 10],
         });
 
         L.marker(center, {
@@ -964,50 +1099,58 @@
     }
   }
 
+
   // Load shapefile data
   async function loadShapefile() {
-    const category = document.getElementById("categorySelect").value;
-    const subcategory = document.getElementById("subcategorySelect").value;
+    const category = document.getElementById("categorySelect").value || '';
+    const subcategory = document.getElementById("subcategorySelect").value || '';
     const button = document.getElementById("loadShapefile");
     const style = getCurrentStyle();
 
     try {
-      button.disabled = true;
-      button.textContent = "Loading...";
+        button.disabled = true;
+        button.textContent = "Loading...";
 
-      if (currentLayer) {
-        map.removeLayer(currentLayer);
-        currentLayer = null;
-      }
+        if (currentLayer) {
+            map.removeLayer(currentLayer);
+            currentLayer = null;
+        }
 
-      const url = `{% url "mapplot:get_data" %}?category=${category}&subcategory=${subcategory}`;
+        // Use the global variable getDataUrl defined in the HTML template
+        const url = `{% url "mapplot:get_data" %}?category=${category}&subcategory=${subcategory}`;
       const response = await fetch(url);
       const geojson = await response.json();
 
-      if (!geojson.features || geojson.features.length === 0) {
-        throw new Error("No feature data received");
-      }
+        if (!geojson.features || geojson.features.length === 0) {
+            throw new Error("No feature data received");
+        }
 
-      currentLayer = L.geoJSON(geojson, {
-        style: (feature) => getFeatureStyle(feature, category),
-        onEachFeature: (feature, layer) => {
-          layer.on({
-            mouseover: highlightFeature,
-            mouseout: resetHighlight,
-            click: handleFeatureClick,
-          });
-        },
-      }).addTo(map);
+        currentLayer = L.geoJSON(geojson, {
+            style: (feature) => getFeatureStyle(feature, category),
+            onEachFeature: (feature, layer) => {
+                layer.on({
+                    mouseover: highlightFeature,
+                    mouseout: resetHighlight,
+                    click: handleFeatureClick,
+                });
+            },
+        }).addTo(map);
 
-      map.fitBounds(currentLayer.getBounds());
+        map.fitBounds(currentLayer.getBounds());
     } catch (error) {
-      console.error("Error loading shapefile:", error);
-      alert("Failed to load shapefile: " + error.message);
+        console.error("Error loading shapefile:", error);
+        alert("Failed to load shapefile: " + error.message);
     } finally {
-      button.disabled = false;
-      button.textContent = "Plot";
+        button.disabled = false;
+        button.textContent = "Plot";
     }
-  }
+}
+
+  ///for india base map below line two line 
+  window.addEventListener('DOMContentLoaded', () => {
+    loadShapefile();
+  });
+
   // Create popup content from feature properties
   function createPopupContent(properties) {
     // Select up to 3 most important properties for popup display
@@ -1071,6 +1214,9 @@
         : "W";
     return `${dms.degrees}°${dms.minutes}'${dms.seconds}"${direction}`;
   }
+
+
+
 
   // Function to manually draw GeoJSON features onto the canvas
   function drawFeaturesOnCanvas(ctx, bounds, canvas, features, scaleFactor) {
@@ -1151,7 +1297,6 @@
       }
     });
   }
-
   // Function to add coordinates to the canvas for image exports with DPI scaling
   function addCoordinatesToCanvas(canvas, bounds, scaleFactor = 1) {
     const ctx = canvas.getContext("2d");
@@ -1273,37 +1418,39 @@
 
     // Calculate the pixel coordinates from geographic coordinates with high precision
     function latLngToPixel(lat, lng) {
+      
       const west = bounds.getWest();
       const east = bounds.getEast();
       const south = bounds.getSouth();
       const north = bounds.getNorth();
-
-      // Calculate margins (same as in addCoordinatesToCanvas)
+    
+      // Calculate margins
       const margin = {
-        top: 60 * scaleFactor,
-        bottom: 60 * scaleFactor,
-        left: 60 * scaleFactor,
-        right: 60 * scaleFactor,
+        top: 50,
+        bottom: 50,
+        left: -5,
+        right: 50,
       };
-
+    
       // Available space for map
       const contentWidth = canvas.width - (margin.left + margin.right);
       const contentHeight = canvas.height - (margin.top + margin.bottom);
-
-      // We need to compensate for the different vertical scaling between Leaflet and our canvas
-      // This dynamically calculates an adjustment based on the map's actual dimensions
-      const aspectRatio = (north - south) / (east - west);
-      const canvasAspectRatio = contentHeight / contentWidth;
-
-      // Dynamically calculate adjustment instead of using a fixed factor
-      const adjustmentFactor = Math.max(0, (aspectRatio / canvasAspectRatio - 1) * 0.05);
-
-      // Precise conversion from lat/lng to x/y with a better adjustment
-      const x = margin.left + ((lng - west) / (east - west)) * contentWidth;
-      const y = margin.top + ((north - lat) / (north - south)) * contentHeight * (1 - adjustmentFactor);
-
+    
+      // Create a Leaflet point using the same projection as the map
+      const point = map.project(L.latLng(lat, lng), map.getZoom());
+      
+      // Get the bounds in pixel coordinates
+      
+      const nwPoint = map.project(L.latLng(north, west), map.getZoom());
+      const sePoint = map.project(L.latLng(south, east), map.getZoom());
+      
+      // Calculate the position relative to the content area
+      const x = margin.left + ((point.x - nwPoint.x) / (sePoint.x - nwPoint.x)) * contentWidth;
+      const y = margin.top + ((point.y - nwPoint.y) / (sePoint.y - nwPoint.y)) * contentHeight;
+    
       return { x: Math.round(x), y: Math.round(y) };
     }
+
     // Enable crisp edges for lines
     ctx.imageSmoothingEnabled = false;
 
@@ -1402,140 +1549,140 @@
         });
       }
     });
-
     // Reset image smoothing
     ctx.imageSmoothingEnabled = true;
   }
 
   function exportAsPDF(mapImage, mapTitle, category, subcategory, timestamp, dpi, featuresWithStyles = [], bounds) {
-  // Get the selected layout
-  const layoutOption = document.getElementById("exportLayout").value;
-  
-  // Split the layout option into format and orientation
-  const [format, orientation] = layoutOption.split('-');
-  
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({
-    orientation: orientation,
-    unit: "mm",
-    format: format,
-    compress: false // Disable compression for better quality
-  });
+    // Get the selected layout
+    const layoutOption = document.getElementById("exportLayout").value;
 
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
+    // Split the layout option into format and orientation
+    const [format, orientation] = layoutOption.split('-');
 
-  // Margins for coordinate labels
-  const margin = {
-    top: 25,
-    bottom: 25,
-    left: 25,
-    right: 25,
-  };
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: orientation,
+      unit: "mm",
+      format: format,
+      compress: false // Disable compression for better quality
+    });
 
-  // Calculate available space for map
-  const contentWidth = pageWidth - (margin.left + margin.right);
-  const contentHeight = pageHeight - (margin.top + margin.bottom);
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-  // Add title with adjusted position
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(24);
-  pdf.text(mapTitle, pageWidth / 2, 15, { align: "center" });
+    // Margins for coordinate labels
+    const margin = {
+      top: 25,
+      bottom: 25,
+      left: 25,
+      right: 25,
+    };
 
-  const img = new Image();
-  img.src = mapImage;
-  img.onload = function () {
-    const imgWidth = img.width;
-    const imgHeight = img.height;
+    // Calculate available space for map
+    const contentWidth = pageWidth - (margin.left + margin.right);
+    const contentHeight = pageHeight - (margin.top + margin.bottom);
 
-    // Calculate dimensions to fit
-    let newWidth = contentWidth - 20;
-    let newHeight = (imgHeight * newWidth) / imgWidth;
+    // Add title with adjusted position
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(24);
+    pdf.text(mapTitle, pageWidth / 2, 15, { align: "center" });
 
-    // Check if height exceeds available space
-    if (newHeight > contentHeight - 20) {
-      newHeight = contentHeight - 20;
-      newWidth = (imgWidth * newHeight) / imgHeight;
-    }
+    const img = new Image();
+    img.src = mapImage;
+    img.onload = function () {
+      const imgWidth = img.width;
+      const imgHeight = img.height;
 
-    // Center the map in the available space
-    const xPos = margin.left + (contentWidth - newWidth) / 2;
-    const yPos = margin.top + (contentHeight - newHeight) / 2;
+      // Calculate dimensions to fit
+      let newWidth = contentWidth - 20;
+      let newHeight = (imgHeight * newWidth) / imgWidth;
 
-    // For sharper rendering in PDF: 
-    // Use a single high-resolution canvas for all drawing
-    const pdfCanvas = document.createElement('canvas');
-    
-    // Create a canvas with higher resolution for sharper output
-    // Scale based on the user-selected DPI, with a minimum multiplier of 3
-    const canvasScale = Math.max(3, dpi / 96);
-    pdfCanvas.width = imgWidth * canvasScale;
-    pdfCanvas.height = imgHeight * canvasScale;
-    
-    const pdfCtx = pdfCanvas.getContext('2d');
-    
-    // Apply sharp rendering settings
-    pdfCtx.imageSmoothingEnabled = false;
-    
-    // First draw the base map (scaled up for quality)
-    pdfCtx.drawImage(img, 0, 0, pdfCanvas.width, pdfCanvas.height);
-    
-    // Draw features with proper geo-positioning and original styles
-    if (featuresWithStyles && featuresWithStyles.length > 0) {
-      // Calculate the proper scale factor based on user DPI
-      const pdfScaleFactor = canvasScale;
-      
-      // Draw directly onto the high-resolution PDF canvas
-      drawFeaturesWithStyles(
-        pdfCtx, 
-        bounds, 
-        pdfCanvas, 
-        featuresWithStyles, 
-        pdfScaleFactor
+      // Check if height exceeds available space
+      if (newHeight > contentHeight - 20) {
+        newHeight = contentHeight - 20;
+        newWidth = (imgWidth * newHeight) / imgHeight;
+      }
+
+      // Center the map in the available space
+      const xPos = margin.left + (contentWidth - newWidth) / 2;
+      const yPos = margin.top + (contentHeight - newHeight) / 2;
+
+      // For sharper rendering in PDF: 
+      // Use a single high-resolution canvas for all drawing
+      const pdfCanvas = document.createElement('canvas');
+
+      // Create a canvas with higher resolution for sharper output
+      // Scale based on the user-selected DPI, with a minimum multiplier of 3
+      const canvasScale = Math.max(3, dpi / 96);
+      pdfCanvas.width = imgWidth * canvasScale;
+      pdfCanvas.height = imgHeight * canvasScale;
+
+      const pdfCtx = pdfCanvas.getContext('2d');
+
+      // Apply sharp rendering settings
+      pdfCtx.imageSmoothingEnabled = false;
+
+      // First draw the base map (scaled up for quality)
+      pdfCtx.drawImage(img, 0, 0, pdfCanvas.width, pdfCanvas.height);
+
+      // Draw features with proper geo-positioning and original styles
+      if (featuresWithStyles && featuresWithStyles.length > 0) {
+        // Calculate the proper scale factor based on user DPI
+        const pdfScaleFactor = canvasScale;
+
+        // Draw directly onto the high-resolution PDF canvas
+        drawFeaturesWithStyles(
+          pdfCtx,
+          bounds,
+          pdfCanvas,
+          featuresWithStyles,
+          pdfScaleFactor
+        );
+      }
+
+      // Get the high-quality image
+      const pdfMapImage = pdfCanvas.toDataURL('image/png', 1.0);
+
+      // Draw border around map area
+      pdf.setDrawColor(0);
+      pdf.setLineWidth(0.5);
+      pdf.rect(xPos - 5, yPos - 5, newWidth + 10, newHeight + 10);
+
+      // Add the map image with features using the FAST alias for better quality
+      pdf.addImage(pdfMapImage, "PNG", xPos, yPos, newWidth, newHeight, undefined, 'FAST');
+
+      // Add coordinate scales on all four sides
+      addCoordinateScales(pdf, xPos, yPos, newWidth, newHeight);
+
+      // Add metadata to bottom with proper spacing
+      const textYPos = pageHeight - 15;
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+
+      // Adjust metadata position based on page size
+      const metadataSpacing = pageWidth < 210 ? 40 : 60;
+
+      pdf.text(`Category: ${category}`, margin.left, textYPos);
+      pdf.text(`Subcategory: ${subcategory}`, margin.left + metadataSpacing, textYPos);
+      pdf.text(`Generated: ${timestamp}`, margin.left + (metadataSpacing * 2), textYPos);
+
+      // For smaller page formats, we might need to adjust or omit some metadata
+      if (pageWidth >= 210) {
+        pdf.text(`Source: IIT BHU DSS (${dpi} DPI)`, margin.left + (metadataSpacing * 3), textYPos);
+      }
+
+      // Save PDF with format in filename
+      pdf.save(`${mapTitle.replace(/\s+/g, "_")}_${format}_${orientation}.pdf`);
+
+      showNotification(
+        "Export Complete",
+        `Map exported as PDF successfully (${format.toUpperCase()} ${orientation}, ${dpi} DPI)`,
+        "success"
       );
-    }
-    
-    // Get the high-quality image
-    const pdfMapImage = pdfCanvas.toDataURL('image/png', 1.0);
-    
-    // Draw border around map area
-    pdf.setDrawColor(0);
-    pdf.setLineWidth(0.5);
-    pdf.rect(xPos - 5, yPos - 5, newWidth + 10, newHeight + 10);
-    
-    // Add the map image with features using the FAST alias for better quality
-    pdf.addImage(pdfMapImage, "PNG", xPos, yPos, newWidth, newHeight, undefined, 'FAST');
+    };
+  }
 
-    // Add coordinate scales on all four sides
-    addCoordinateScales(pdf, xPos, yPos, newWidth, newHeight);
-
-    // Add metadata to bottom with proper spacing
-    const textYPos = pageHeight - 15;
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-    
-    // Adjust metadata position based on page size
-    const metadataSpacing = pageWidth < 210 ? 40 : 60;
-    
-    pdf.text(`Category: ${category}`, margin.left, textYPos);
-    pdf.text(`Subcategory: ${subcategory}`, margin.left + metadataSpacing, textYPos);
-    pdf.text(`Generated: ${timestamp}`, margin.left + (metadataSpacing * 2), textYPos);
-    
-    // For smaller page formats, we might need to adjust or omit some metadata
-    if (pageWidth >= 210) {
-      pdf.text(`Source: IIT BHU DSS (${dpi} DPI)`, margin.left + (metadataSpacing * 3), textYPos);
-    }
-
-    // Save PDF with format in filename
-    pdf.save(`${mapTitle.replace(/\s+/g, "_")}_${format}_${orientation}.pdf`);
-
-    showNotification(
-      "Export Complete",
-      `Map exported as PDF successfully (${format.toUpperCase()} ${orientation}, ${dpi} DPI)`,
-      "success"
-    );
-  };
-}
   function handleMapExport() {
     const mapElement = document.getElementById("map");
     const exportFormat = document.getElementById("exportFormat").value;
@@ -1895,9 +2042,12 @@
     pdf.text("W", x - 15, y + height / 2, { align: "center" });
     pdf.text("E", x + width + 15, y + height / 2, { align: "center" });
   }
+ 
 
 
-  // Document ready function
+
+
+// Document ready function
   document.addEventListener("DOMContentLoaded", function () {
     // Initialize map
     initMap();
@@ -1943,20 +2093,20 @@
       });
 
     // Grid toggle
-    document
-      .getElementById("grid-toggle")
-      .addEventListener("change", function (e) {
-        if (e.target.checked) {
-          addCoordinateGrid();
-        } else {
-          gridLines.forEach((line) => {
-            if (map.hasLayer(line)) {
-              map.removeLayer(line);
-            }
-          });
-          gridLines = [];
-        }
-      });
+    // document
+    //   .getElementById("grid-toggle")
+    //   .addEventListener("change", function (e) {
+    //     if (e.target.checked) {
+    //       addCoordinateGrid();
+    //     } else {
+    //       gridLines.forEach((line) => {
+    //         if (map.hasLayer(line)) {
+    //           map.removeLayer(line);
+    //         }
+    //       });
+    //       gridLines = [];
+    //     }
+    //   });
 
     // Info panel toggle
     document
@@ -2035,73 +2185,81 @@
       .addEventListener("click", function () {
         showNotification("Location", "Finding your location...", "info");
 
-        map
-          .locate({ setView: true, maxZoom: 16 })
-          .on("locationfound", function (e) {
-            // Add a marker at the location
-            const locationMarker = L.circleMarker(e.latlng, {
-              radius: 8,
-              color: "#3498db",
-              weight: 3,
-              opacity: 1,
-              fillColor: "#3498db",
-              fillOpacity: 0.4,
-            }).addTo(map);
+        // Get accurate location using system permission
+map
+  .locate({
+    setView: true,
+    maxZoom: 16,
+    enableHighAccuracy: true,  // Use GPS if available
+    timeout: 10000,            // Wait up to 10 seconds
+    maximumAge: 0              // Don't use cached location
+  })
+  .on("locationfound", function (e) {
+    // Add a marker at the location
+    const locationMarker = L.circleMarker(e.latlng, {
+      radius: 8,
+      color: "#3498db",
+      weight: 3,
+      opacity: 1,
+      fillColor: "#3498db",
+      fillOpacity: 0.4,
+    }).addTo(map);
 
-            // Add a pulsing circle
-            const pulseCircle = L.circleMarker(e.latlng, {
-              radius: 0,
-              color: "#3498db",
-              weight: 3,
-              opacity: 0,
-              fillColor: "#3498db",
-              fillOpacity: 0.2,
-            }).addTo(map);
+    // Add a pulsing circle
+    const pulseCircle = L.circleMarker(e.latlng, {
+      radius: 0,
+      color: "#3498db",
+      weight: 3,
+      opacity: 0,
+      fillColor: "#3498db",
+      fillOpacity: 0.2,
+    }).addTo(map);
 
-            // Animate the pulse
-            let radius = 0;
-            const pulseAnimation = setInterval(() => {
-              radius += 1;
-              pulseCircle.setRadius(radius);
-              pulseCircle.setStyle({
-                opacity: Math.max(0, 1 - radius / 30),
-                fillOpacity: Math.max(0, 0.2 - radius / 30),
-              });
+    // Animate the pulse
+    let radius = 0;
+    const pulseAnimation = setInterval(() => {
+      radius += 1;
+      pulseCircle.setRadius(radius);
+      pulseCircle.setStyle({
+        opacity: Math.max(0, 1 - radius / 30),
+        fillOpacity: Math.max(0, 0.2 - radius / 30),
+      });
 
-              if (radius > 30) {
-                radius = 0;
-              }
-            }, 50);
+      if (radius > 30) {
+        radius = 0;
+      }
+    }, 50);
 
-            // Clear animation after 5 seconds
-            setTimeout(() => {
-              clearInterval(pulseAnimation);
-              map.removeLayer(pulseCircle);
-            }, 5000);
+    // Clear animation after 5 seconds
+    setTimeout(() => {
+      clearInterval(pulseAnimation);
+      map.removeLayer(pulseCircle);
+    }, 5000);
 
-            showNotification(
-              "Location Found",
-              "Your current location has been located",
-              "success"
-            );
-          })
-          .on("locationerror", function (e) {
-            // Fallback for demo or if geolocation fails
-            const randomLat = 22.3511 + (Math.random() * 2 - 1);
-            const randomLng = 78.6677 + (Math.random() * 2 - 1);
-            map.setView([randomLat, randomLng], 10);
+    showNotification(
+      "Location Found",
+      "Your current location has been located",
+      "success"
+    );
+  })
+  .on("locationerror", function (e) {
+    // Fallback for demo or if geolocation fails
+    const randomLat = 22.3511 + (Math.random() * 2 - 1);
+    const randomLng = 78.6677 + (Math.random() * 2 - 1);
+    map.setView([randomLat, randomLng], 10);
 
-            L.marker([randomLat, randomLng])
-              .addTo(map)
-              .bindPopup("Simulated location (Geolocation not available)")
-              .openPopup();
+    L.marker([randomLat, randomLng])
+      .addTo(map)
+      .bindPopup("Simulated location (Geolocation not available)")
+      .openPopup();
 
-            showNotification(
-              "Location Simulated",
-              "Using demo location (geolocation unavailable)",
-              "info"
-            );
-          });
+    showNotification(
+      "Location Simulated",
+      "Using demo location (geolocation unavailable)",
+      "info"
+    );
+  });
+
       });
 
     document
@@ -2257,6 +2415,7 @@
             } analysis tool selected`,
             "info"
           );
+          
 
           // Close dropdown
           document
@@ -2798,12 +2957,13 @@
 
     // Update when window is resized
     window.addEventListener("resize", adjustForScreenSize);
-  });
+    });
 
   //////////////////////////////
   // Add this code at the very end of your script tag, OUTSIDE your existing DOMContentLoaded handler
-
   // Create the buffer toolbar and functionality after the page is fully loaded
+
+
   window.addEventListener('load', function () {
     // Create buffer toolbar
     const bufferToolbar = document.createElement('div');
@@ -3207,7 +3367,246 @@
       }
     }
   });
-  ///////////////////
 
+
+
+  //<-------------------------------------->end of script for buffer tool<------------------------------------------------->
+
+// // Global variables
+// window.uploadedLayers = new map(); // To store uploaded layer data (name: geojson, not rendered yet)
+window.selectedLayers = []; // To track selected layers for union
+
+// Initialize union analysis tool
+function initUnionAnalysis() {
+    const unionItem = document.querySelector('.dropdown-item[data-analysis="union"]');
+    if (unionItem) {
+        unionItem.addEventListener('click', function() {
+            const unionModal = document.getElementById('unionModal');
+            const modal = new bootstrap.Modal(unionModal);
+            modal.show();
+            showNotification("Union Analysis", "Union analysis tool activated.", "info");
+            updateLayerList(); // Show uploaded layers as checkboxes
+        });
+    }
+}
+
+// Update the layer list with checkboxes
+function updateLayerList() {
+    const layerList = document.getElementById('layerList');
+    if (!layerList || !window.map) return;
+
+    layerList.innerHTML = ''; // Clear existing list
+    window.selectedLayers = []; // Reset selected layers
+
+    window.uploadedLayers.forEach((geojson, name) => {
+        const div = document.createElement('div');
+        div.className = 'form-check';
+        div.innerHTML = `
+            <input class="form-check-input layer-checkbox" type="checkbox" value="${name}" id="layer_${name}">
+            <label class="form-check-label" for="layer_${name}">${name}</label>
+        `;
+        layerList.appendChild(div);
+    });
+
+    // Add event listeners to checkboxes
+    document.querySelectorAll('.layer-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (!window.selectedLayers) window.selectedLayers = [];
+            if (this.checked) {
+                window.selectedLayers.push(this.value);
+            } else {
+                window.selectedLayers = window.selectedLayers.filter(id => id !== this.value);
+            }
+        });
+    });
+}
+
+// Upload multiple shapefiles (store but don't add to map)
+async function uploadShapefiles(files) {
+    const formData = new FormData();
+    for (const file of files) {
+        formData.append('shapefiles', file); // Append each shapefile
+    }
+
+    try {
+        const response = await fetch('/mapplot/upload-shapefile/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+
+        const data = await processServerResponse(response);
+        if (data.geojson_list) {
+            data.geojson_list.forEach(geojsonItem => {
+                const layerName = geojsonItem.name;
+                window.uploadedLayers.set(layerName, geojsonItem.geojson); // Store GeoJSON, not layer
+            });
+            updateLayerList(); // Update checkboxes
+            showNotification("Success", "Shapefiles uploaded successfully", "success");
+            return true;
+        }
+    } catch (error) {
+        showNotification("Error", `Failed to upload shapefiles: ${error.message}`, "error");
+        return false;
+    }
+}
+
+// Perform union of selected layers
+async function performUnion() {
+    if (!window.selectedLayers || window.selectedLayers.length < 2) {
+        showNotification("Warning", "Please select at least 2 layers for union.", "warning");
+        return;
+    }
+
+    const payload = { layer_names: window.selectedLayers };
+
+    try {
+        const response = await fetch('/mapplot/union-shapefiles/', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+
+        const data = await processServerResponse(response);
+        handleUnionResult(data);
+    } catch (error) {
+        showNotification("Error", `Union failed: ${error.message}`, "error");
+    }
+}
+
+// Handle union result and add to map
+function handleUnionResult(data) {
+    if (!data.geojson) {
+        showNotification("Error", "No GeoJSON data returned from server.", "error");
+        return;
+    }
+
+    let geoJsonData = typeof data.geojson === 'string' ? JSON.parse(data.geojson) : data.geojson;
+
+    // Display result statistics (optional, can be removed if not needed)
+    const resultDiv = document.getElementById('unionResult');
+    const statsList = document.getElementById('unionStats');
+    resultDiv.style.display = 'block';
+    statsList.innerHTML = '';
+
+    const features = geoJsonData.features || [];
+    const numFeatures = features.length;
+    const stats = [
+        `Total features: ${numFeatures}`,
+        `Operation completed at: ${new Date().toLocaleString()}`
+    ];
+    if (numFeatures > 0 && features[0].geometry) {
+        stats.push(`Geometry type: ${features[0].geometry.type}`);
+    }
+    stats.forEach(stat => {
+        const li = document.createElement('li');
+        li.textContent = stat;
+        statsList.appendChild(li);
+    });
+
+    // Add union result to map
+    if (window.unionResultLayer && window.map) {
+        window.map.removeLayer(window.unionResultLayer); // Remove previous union layer
+    }
+    const outputName = document.getElementById('unionOutputName').value || "Union Result";
+    window.unionResultLayer = L.geoJSON(geoJsonData).addTo(window.map);
+    window.unionResultLayer.name = outputName;
+    showNotification("Union Complete", "Union operation completed successfully.", "success");
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    initUnionAnalysis();
+
+    const uploadBtn = document.getElementById('uploadShapefileBtn');
+    const fileInput = document.getElementById('shapefileUpload');
+    const performUnionBtn = document.getElementById('performUnion');
+    const clearBtn = document.getElementById('clearUnionSelection');
+
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', async function() {
+            const files = fileInput.files;
+            if (files.length === 0) {
+                showNotification("Warning", "Please select at least one file to upload.", "warning");
+                return;
+            }
+            await uploadShapefiles(files); // Upload all selected files
+            fileInput.value = ''; // Clear input
+            const fileLabel = document.querySelector('.custom-file-label');
+            if (fileLabel) fileLabel.textContent = 'Upload Shapefile (.shp or .zip)';
+        });
+    }
+
+    if (performUnionBtn) {
+        performUnionBtn.addEventListener('click', async function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            this.disabled = true;
+            await performUnion();
+            this.innerHTML = '<i class="fas fa-object-group"></i> Perform Union';
+            this.disabled = false;
+        });
+    }
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            window.selectedLayers = [];
+            document.querySelectorAll('.layer-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            fileInput.value = '';
+            const fileLabel = document.querySelector('.custom-file-label');
+            if (fileLabel) fileLabel.textContent = 'Upload Shapefile (.shp or .zip)';
+            document.getElementById('unionOutputName').value = '';
+            document.getElementById('unionResult').style.display = 'none';
+            showNotification("Info", "Union selection cleared.", "info");
+        });
+    }
+});
+
+// Process server response
+function processServerResponse(response) {
+    if (!response.ok) {
+        return response.text().then(text => {
+            try {
+                const jsonData = JSON.parse(text);
+                throw new Error(jsonData.error || "Server error occurred");
+            } catch (e) {
+                throw new Error(text || "Unknown server error");
+            }
+        });
+    }
+    return response.json();
+}
+
+// Get CSRF token from cookies
+function getCsrfToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 'csrftoken='.length) === 'csrftoken=') {
+                cookieValue = decodeURIComponent(cookie.substring('csrftoken='.length));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Simple notification function
+function showNotification(title, message, type) {
+    console.log(`${type.toUpperCase()}: ${title} - ${message}`);
+    if (typeof toastr !== 'undefined') {
+        toastr[type](message, title);
+    } else if (type === 'error') {
+        alert(`${title}: ${message}`);
+    }
+}
 </script>
 {% endblock %}

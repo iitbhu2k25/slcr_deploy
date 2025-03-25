@@ -7,6 +7,19 @@ import uuid
 from django.conf import settings
 import logging
 from django.core.files.storage import FileSystemStorage
+import logging
+from django.views.decorators.csrf import csrf_exempt
+import tempfile
+# this below code for union operation
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import geopandas as gpd
+import tempfile
+import os
+import json
+from shapely.ops import unary_union
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,64 +34,12 @@ def allowed_file(filename):
 def shapefile_viewer(request):
     return render(request, 'shapefile_viewer.html')
 
-def upload_shapefile(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
-    
-    try:
-        logger.info("Starting file upload process")
-        
-        if not request.FILES.getlist('files'):
-            logger.error("No files in request")
-            return JsonResponse({'error': 'No files provided'}, status=400)
-        
-        files = request.FILES.getlist('files')
-        category = request.POST.get('category', '')
-        subcategory = request.POST.get('subcategory', '')
-        
-        # Create upload directory structure
-        upload_path = os.path.join('shapefile', category, subcategory)
-        fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, upload_path))
-        
-        # Track uploaded files
-        uploaded_files = []
-        file_extensions = set()
-        base_filename = None
-        
-        # Find the .shp file first
-        for file in files:
-            if file.name.lower().endswith('.shp'):
-                base_filename = os.path.splitext(file.name)[0]
-                break
-        
-        if not base_filename:
-            return JsonResponse({'error': 'No .shp file found'}, status=400)
-        
-        # Save all files
-        for file in files:
-            if file and allowed_file(file.name):
-                ext = os.path.splitext(file.name)[1].lower()
-                new_filename = f"{base_filename}{ext}"
-                filepath = fs.save(new_filename, file)
-                uploaded_files.append(fs.path(filepath))
-                file_extensions.add(ext[1:])
-        
-        # Verify required files
-        required_extensions = {'shp', 'dbf', 'shx'}
-        missing_extensions = required_extensions - file_extensions
-        
-        if missing_extensions:
-            return JsonResponse({
-                'error': f"Missing required files: {', '.join(missing_extensions)}"
-            }, status=400)
-        
-        return JsonResponse({'success': True})
-        
-    except Exception as e:
-        logger.error(f"Error uploading files: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=500)
+# def anad(request):    
+#     return render(request, 'test.html')
+
 
 def get_shapefile_data(request):
+
     try:
         category = request.GET.get('category', '')
         subcategory = request.GET.get('subcategory', '')
@@ -86,6 +47,10 @@ def get_shapefile_data(request):
         logger.info(f"Requested category: {category}, subcategory: {subcategory}")
 
         shapefile_paths = {
+            'india': {
+                'all': os.path.join('shapefile', 'india', 'india.shp')
+            },
+            
             'administrative': {
                 'district': os.path.join('shapefile', 'Administrative', 'District', 'Districts.shp'),
                 'villages': os.path.join('shapefile', 'Administrative', 'Villages', 'Villages_PCS.shp')
@@ -131,6 +96,20 @@ def get_shapefile_data(request):
             }
         }
 
+# Check if category or subcategory is empty, set defaults
+        if not category or not subcategory:
+            # Set default values to load automatically
+            default_category = 'india'
+            default_subcategory = 'all'
+            
+            logger.info(f"Using default shapefile: {default_category}/{default_subcategory}")
+            
+            if not category:
+                category = default_category
+            if not subcategory:
+                subcategory = default_subcategory
+
+                
         if category in shapefile_paths and subcategory in shapefile_paths[category]:
             shapefile_path = os.path.join(settings.MEDIA_ROOT, shapefile_paths[category][subcategory])
             
@@ -155,8 +134,9 @@ def get_shapefile_data(request):
             # Convert to WGS84 if needed
             if gdf.crs and gdf.crs != 'EPSG:4326':
                 logger.info("Converting CRS to EPSG:4326")
+             
                 gdf = gdf.to_crs('EPSG:4326')
-
+#               gdf_web = gdf.to_crs('EPSG:3857')
             features = []
             for idx, row in gdf.iterrows():
                 try:
@@ -314,7 +294,76 @@ def get_shapefile_data(request):
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}", exc_info=True)
         return JsonResponse({'error': str(e)}, status=500)
-    
+       
     # Add this to your view
         print(f"Processing shapefile for {category}/{subcategory}")
         print(f"Coordinate sample: {gdf.geometry.iloc[0]}")
+#  --------------------------------------->end of get_shapefile for shapefile viewer<--------------------------------------------->
+
+
+
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import geopandas as gpd
+import tempfile
+import os
+import json
+from shapely.ops import unary_union
+
+# In-memory storage for shapefiles
+uploaded_shapefiles = {}
+
+@csrf_exempt
+def upload_shapefile(request):
+    if request.method == 'POST' and request.FILES:
+        shapefiles = request.FILES.getlist('shapefiles')
+        geojson_list = []
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            for uploaded_file in shapefiles:
+                file_path = os.path.join(tempdir, uploaded_file.name)
+                with open(file_path, 'wb') as f:
+                    for chunk in uploaded_file.chunks():
+                        f.write(chunk)
+                
+                try:
+                    gdf = gpd.read_file(file_path)
+                    layer_name = uploaded_file.name.split('.')[0]
+                    geojson_data = gdf.to_json()
+                    uploaded_shapefiles[layer_name] = gdf  # Store for union
+                    geojson_list.append({"name": layer_name, "geojson": geojson_data})
+                except Exception as e:
+                    return JsonResponse({"error": str(e)}, status=500)
+
+        return JsonResponse({"geojson_list": geojson_list}, status=200)
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+@csrf_exempt
+def union_shapefiles(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            layer_names = data.get('layer_names', [])
+            
+            if len(layer_names) < 2:
+                return JsonResponse({"error": "At least 2 layers required"}, status=400)
+
+            gdfs = [uploaded_shapefiles[name] for name in layer_names if name in uploaded_shapefiles]
+            if len(gdfs) != len(layer_names):
+                return JsonResponse({"error": "One or more layers not found"}, status=404)
+
+            all_geometries = []
+            for gdf in gdfs:
+                all_geometries.extend(gdf.geometry)
+
+            union_geometry = unary_union(all_geometries)
+            union_gdf = gpd.GeoDataFrame(geometry=[union_geometry], crs=gdfs[0].crs)
+            geojson_data = union_gdf.to_json()
+
+            return JsonResponse({"geojson": geojson_data}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request"}, status=400)

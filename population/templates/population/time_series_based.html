@@ -1,208 +1,1757 @@
 {% extends 'population/base.html' %}
 {% block content %}
-<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> -->
-<div class="container-2 my-5" style="border: 1.5px solid;">
-  <h3 class="text-center mb-4" style="color: #ff00cc;">Population Estimation and Forecasting</h3>
-  <form method="">
-    {% csrf_token %}
 
-    <!-- State, District, and Sub-District Selection -->
-    <div class="row">
-      <div class="form-group col-12 col-md-3 mb-3">
-        <label for="state">State:</label>
-        <select id="state" name="state">
-          <option value="">Select a State</option>
-        </select>
-      </div>
-
-      <div class="form-group col-12 col-md-3 mb-3">
-        <label for="district">District:</label>
-        <select id="district" name="district">
-          <option value="">Select a District</option>
-        </select>
-      </div>
-
-      <div class="form-group col-12 col-md-3 mb-3">
-        <label for="subdistrict">Sub-District:</label>
-        <select id="subdistrict" name="subdistrict">
-          <option value="">Select a Sub-District</option>
-        </select>
-      </div>
-
-      <div class="form-group col-10 col-md-5 mb-3">
-        <label for="town-village">Town/Village:</label>
-        <div id="town-village-container" class="border p-2" style="max-height: 200px; overflow-y: auto;">
-          <!-- Villages/Towns checkboxes will be dynamically populated here -->
-        </div>
-      </div>
-
-      <!-- Selected Villages/Towns Display -->
-      <div class="form-group col-10 col-md-5 mb-3">
-        <label>Selected Town/Village:</label>
-
-        <div id="selected-villages" class="border p-2">
-          <!-- Selected villages/towns will be displayed here -->
-        </div>
-        <div id="total-population" class="mt-3"></div>
-      </div>
-
-
-      <div class="form-group col-12 col-md-3 mb-3">
-        <label for="base-year">Last Census Year:</label>
-        <select id="base-year" name="base_year">
-          <option value="2011" selected>2011</option>
-        </select>
-      </div>
-
-      <div class="form-group col-5 mb-3">
-        <label class="mb-2">Select Design Year:</label>
-        <div class="d-flex align-items-center flex-wrap gap-3">
-          <!-- Single Year Option -->
-          <div class="d-flex align-items-center">
-            <input type="radio" id="single-year-option" name="year_selection" value="single" class="me-2" checked>
-            <label for="single-year-option" class="me-2 mb-0">Single Year:</label>
-            <input type="number" id="target-year" name="target_year" class="form-control form-control-sm"
-              placeholder="Enter year (e.g., 2025)" style="max-width: 175px;"
-              onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-              oninput="this.value = this.value.replace(/[^0-9]/g, '' ) " >
-          </div>
-          <span id="target-year-error" class="text-danger small"></span> <!-- Error message for single year -->
-
-          <!-- Range Year Option -->
-          <div class="d-flex align-items-center">
-            <input type="radio" id="range-year-option" name="year_selection" value="range" class="me-2">
-            <label for="range-year-option" class="me-2 mb-0">Range of Years:</label>
-            <div class="input-group input-group-sm" style="max-width: 450px;">
-              <input type="number" id="target-year-range-start" name="target_year_start" class="form-control"
-                placeholder="Start Year (e.g., 2020)" style="min-width: 120px;"
-                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled required>
-              <span class="input-group-text">to</span>
-              <input type="number" id="target-year-range-end" name="target_year_end" class="form-control"
-                placeholder="End Year (e.g., 2030)" style="min-width: 120px;"
-                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled >
-            </div>
-          </div>
-          <span id="target-year-range-error" class="text-danger small"></span> <!-- Error message for range years -->
-        </div>
-      </div>
-
-
-    <!-- Population Prediction Methods -->
-    <div class="form-group col-12 mb-3">
-      <label class="mb-3">Population Prediction Methods:</label>
-      <div class="d-flex flex-wrap gap-3">
-        <div class="form-check">
-          <input type="radio" id="time-series" name="prediction_method" value="time-series" class="form-check-input">
-          <label for="time-series" class="form-check-label">Time-Series</label>
-        </div>
-        <div class="form-check">
-          <input type="radio" id="demographic-based" name="prediction_method" value="demographic-based" class="form-check-input" >
-          <label for="demographic-based" class="form-check-label">Demographic-Based</label>
-        </div>
-        
-        <div class="form-check">
-          <input type="radio" id="cohort-component" name="prediction_method" value="cohort-component" class="form-check-input">
-          <label for="cohort-component" class="form-check-label">Cohort-Component</label>
-        </div>
-        
-        <div class="form-check">
-          <input type="radio" id="scenario-based" name="prediction_method" value="scenario-based" class="form-check-input">
-          <label for="scenario-based" class="form-check-label">Scenario-Based</label>
-        </div>
-      </div>
-      <div id="time-series-options" class="mt-3" style="display: none;">
-        <label class="mb-2">Select Time-Series Methods:</label>
-        <div class="d-flex flex-column gap-2">
-          <div class="form-check">
-            <input type="checkbox" id="arithmetic-increase" name="timeseries_method" value="arithmetic-increase" class="form-check-input">
-            <label for="arithmetic-increase" class="form-check-label">Arithmetic Increase Method</label>
-          </div>
-          <div class="form-check">
-            <input type="checkbox" id="geometric-increase" name="timeseries_method" value="geometric-increase" class="form-check-input">
-            <label for="geometric-increase" class="form-check-label">Geometric Increase Method</label>
-          </div>
-          <div class="form-check">
-            <input type="checkbox" id="logistic-growth" name="timeseries_method" value="logistic-growth" class="form-check-input">
-            <label for="logistic-growth" class="form-check-label">Logistic Growth Method</label>
-          </div>
-          <div class="form-check">
-            <input type="checkbox" id="exponential-growth" name="timeseries_method" value="exponential-growth" class="form-check-input">
-            <label for="exponential-growth" class="form-check-label">Exponential Growth Method</label>
-          </div>
-          <div class="form-check">
-            <input type="checkbox" id="incremental-growth" name="timeseries_method" value="incremental-growth" class="form-check-input">
-            <label for="incremental-growth" class="form-check-label">Incremental Growth Method</label>
-          </div>
-        </div>
-      </div>
-
-
-      <div id="demographic-options" class="mt-3" style="display: none;">
-        <div class="row">
-          <div class="form-group col-12 col-md-3 mb-3">
-            <label for="birth-rate">Annual Birth Rate:</label>
-            <input type="number" id="birth-rate" name="birth_rate" class="form-control" placeholder="Enter births/1000 people">
-          </div>
-      
-          <div class="form-group col-12 col-md-3 mb-3">
-            <label for="death-rate">Annual Death Rate:</label>
-            <input type="number" id="death-rate" name="death_rate" class="form-control" placeholder="Enter deaths/1000 people">
-          </div>
-      
-          <div class="form-group col-12 col-md-3 mb-3">
-            <label for="emigration-rate">Annual Emigration Rate:</label>
-            <input type="number" id="emigration-rate" name="emigration_rate" class="form-control"
-              placeholder="Enter emigrations/1000 people">
-          </div>
-      
-          <div class="form-group col-12 col-md-3 mb-3">
-            <label for="immigration-rate">Annual Immigration Rate:</label>
-            <input type="number" id="immigration-rate" name="immigration_rate" class="form-control"
-              placeholder="Enter immigrations/1000 people">
-          </div>
-        </div>
-      </div>
-      
-      <button id="clc" class="btn btn-dark mt-4">Calculate</button>
-      <button class="btn btn-warning mt-4" style="margin-left: 12px;">Reset</button>
-    </div>
-       
- </div>
- <button id="toggle-view" class="btn btn-primary" style="display: none;">Show graph</button>
- <div id="chart-container" style="display: none;">
-  <canvas id="summedChart"></canvas>
- </div>
- <div id="results-section" class="mt-4" style="display: none;">
-  <h4 class="mb-3">Population Forecasting Results</h4>
-  <div id="results-container">
-    <!-- Results tables will be dynamically inserted here -->
-  </div>
-</div>
- </form>
-</div>
-
-<script>
-  function togglePredictionOptions() {
-    let timeSeriesOptions = document.getElementById('time-series-options');
-    let demographicOptions = document.getElementById('demographic-options');
-
-    if (document.getElementById('time-series').checked) {
-      timeSeriesOptions.style.display = 'block';
-      demographicOptions.style.display = 'none';
-    } else if (document.getElementById('demographic-based').checked) {
-      timeSeriesOptions.style.display = 'none';
-      demographicOptions.style.display = 'block';
-    } else {
-      timeSeriesOptions.style.display = 'none';
-      demographicOptions.style.display = 'none';
-    }
+<!-- Add style to hide elements with the "hidden" class -->
+<style>
+  .hidden { display: none; }
+  .stage { margin-bottom: 30px; padding: 15px; border: 1px solid #ccc; }
+  .bordered {
+    border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important; 
+    border-radius: 5px; 
+    padding: 15px;
+    margin-bottom: 15px;
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    togglePredictionOptions();  // Initialize state on page load
+  .sewage-section {
+    border: 1.5px solid #aaa;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
 
+  /* Stage Navigation Sidebar */
+  .stage-nav {
+      position: absolute;
+      top: 240px;
+      left: 20px;
+      width: 220px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      z-index: 1000;
+  }
+  .stage-nav ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+  }
+  .stage-nav li {
+      padding: 8px 10px;
+      margin-bottom: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+  }
+  .stage-nav li.current {
+      background-color: #007bff;
+      color: #fff;
+      font-weight: bold;
+  }
+  .stage-nav li.completed {
+      background-color: #28a745;
+      color: #fff;
+  }
+  .stage-nav li.pending {
+      background-color: #6c757d;
+      color: #fff;
+  }
+  /* Adjust main content margin so it doesn't overlap the sidebar */
+  .main-content {
+      margin-left: 260px;
+  }
+  
+  .error {
+  background-color: red !important;
+  color: white !important;
+  font-weight: bold;
+}
+.box {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #f9f9f9; /* Optional: light background */
+}
+
+
+  
+
+  
+</style>
+
+<!-- Include jsPDF Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+
+<!-- Stage Navigation Sidebar -->
+<div class="stage-nav">
+  <h5>Stages</h5>
+  <ul>
+    <li id="nav-population" class="current">Population Forecasting</li>
+    <li id="nav-demand" class="pending">Water Demand</li>
+    <li id="nav-supply" class="pending">Water Supply</li>
+    <li id="nav-sewage" class="pending">Sewage</li>
+  </ul>
+</div>
+
+<div class="main-content">
+  <!-- Persistent Information Panel (Always Visible) -->
+  <div id="persistent-info" style="background-color: #eee; padding: 10px; margin-bottom: 20px;">
+    <strong>Location &amp; Year:</strong>
+    <span id="selected-state">State</span> &raquo;
+    <span id="selected-district">District</span> &raquo;
+    <span id="selected-subdistrict">Sub-District</span> &raquo;
+    <span id="selected-village">Village</span> &raquo;
+    <span id="selected-year">Year</span>
+  </div>
+
+  <!-- Population Estimation Section -->
+  <div id="population-stage" class="container-2 my-5" style="border: 1.5px solid;">
+    <h3 class="text-center mb-4" style="color: #ff00cc;">Population Estimation and Forecasting</h3>
+    <form method="">
+      {% csrf_token %}
+      <!-- State, District, Sub-District, and Town/Village Selection -->
+      <div class="row">
+        <div class="form-group col-12 col-md-3 mb-3">
+          <label for="state">State:</label>
+          <select id="state" name="state">
+            <option value="">Select a State</option>
+          </select>
+        </div>
+        <div class="form-group col-12 col-md-3 mb-3">
+          <label for="district">District:</label>
+          <select id="district" name="district">
+            <option value="">Select a District</option>
+          </select>
+        </div>
+        <div class="form-group col-12 col-md-3 mb-3">
+          <label for="subdistrict">Sub-District:</label>
+          <select id="subdistrict" name="subdistrict">
+            <option value="">Select a Sub-District</option>
+          </select>
+        </div>
+        <div class="form-group col-10 col-md-5 mb-3">
+          <label for="town-village">Town/Village:</label>
+          <div id="town-village-container" class="border p-2" style="max-height: 200px; overflow-y: auto;">
+            <!-- Populated by script1.js -->
+          </div>
+        </div>
+        <!-- Selected Villages/Towns Display -->
+        <div class="form-group col-10 col-md-5 mb-3">
+          <label>Selected Town/Village:</label>
+          <div id="selected-villages" class="border p-2">
+            <!-- Updated by script1.js -->
+          </div>
+          <div id="total-population" class="mt-3"></div>
+        </div>
+        <div class="form-group col-12 col-md-3 mb-3">
+          <label for="base-year">Last Census Year:</label>
+          <select id="base-year" name="base_year">
+            <option value="2011" selected>2011</option>
+          </select>
+        </div>
+        <div class="form-group col-5 mb-3">
+          <label class="mb-2">Select Design Year:</label>
+          <div class="d-flex align-items-center flex-wrap gap-3">
+            <!-- Single Year Option -->
+            <div class="d-flex align-items-center">
+              <input type="radio" id="single-year-option" name="year_selection" value="single" class="me-2" checked>
+              <label for="single-year-option" class="me-2 mb-0">Single Year:</label>
+              <input type="number" id="target-year" name="target_year" class="form-control form-control-sm"
+                    placeholder="Enter year (e.g., 2025)" style="max-width: 175px;"
+                    onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            </div>
+            <span id="target-year-error" class="text-danger small"></span>
+            <!-- Range Year Option -->
+            <div class="d-flex align-items-center">
+              <input type="radio" id="range-year-option" name="year_selection" value="range" class="me-2">
+              <label for="range-year-option" class="me-2 mb-0">Range of Years:</label>
+              <div class="input-group input-group-sm" style="max-width: 450px;">
+                <input type="number" id="target-year-range-start" name="target_year_start" class="form-control"
+                      placeholder="Start Year (e.g., 2020)" style="min-width: 120px;"
+                      onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                      oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled required>
+                <span class="input-group-text">to</span>
+                <input type="number" id="target-year-range-end" name="target_year_end" class="form-control"
+                      placeholder="End Year (e.g., 2030)" style="min-width: 120px;"
+                      onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                      oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled>
+              </div>
+            </div>
+            <span id="target-year-range-error" class="text-danger small"></span>
+          </div>
+        </div>
+        <!-- Population Prediction Methods -->
+        <div class="form-group col-12 mb-3">
+          <label class="mb-3">Population Prediction Methods:</label>
+
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check">
+              <input type="checkbox" id="time-series" name="prediction_method" value="time-series" class="form-check-input">
+              <label for="time-series" class="form-check-label">Time-Series</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" id="demographic-based" name="prediction_method" value="demographic-based" class="form-check-input">
+              <label for="demographic-based" class="form-check-label">Demographic-Based</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" id="cohort-component" name="prediction_method" value="cohort-component" class="form-check-input">
+              <label for="cohort-component" class="form-check-label">Cohort-Component</label>
+            </div>
+          </div>
+          
+          <div id="time-series-options" style="display: none; border: 1px inset; padding: 8px;">
+            <!-- Time-Series options content -->
+            
+            <p class="mb-2">Select Time-Series Methods:</label>
+            <div class="d-flex flex-column gap-2">
+              <div class="form-check">
+                <input type="checkbox" id="arithmetic-increase" name="timeseries_method" value="arithmetic-increase" class="form-check-input">
+                <label for="arithmetic-increase" class="form-check-label">Arithmetic Increase Method</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" id="geometric-increase" name="timeseries_method" value="geometric-increase" class="form-check-input">
+                <label for="geometric-increase" class="form-check-label">Geometric Increase Method</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" id="logistic-growth" name="timeseries_method" value="logistic-growth" class="form-check-input">
+                <label for="logistic-growth" class="form-check-label">Logistic Growth Method</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" id="exponential-growth" name="timeseries_method" value="exponential-growth" class="form-check-input">
+                <label for="exponential-growth" class="form-check-label">Exponential Growth Method</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" id="incremental-growth" name="timeseries_method" value="incremental-growth" class="form-check-input">
+                <label for="incremental-growth" class="form-check-label">Incremental Growth Method</label>
+              </div>
+            </div>
+          </div>
+          
+          <div id="demographic-options" style="display: none; border: 1px inset; padding: 8px; margin-top:10px">
+            <p class="mb-2"> Fill Demographic-Based Fields</label>
+            <div class="row"> 
+              <div class="form-group col-12 col-md-3 mb-3">
+                <label for="birth-rate">Annual Birth Rate:</label>
+                <input type="number" id="birth-rate" name="birth_rate" class="form-control" placeholder="Enter births/1000 people">
+              </div>
+              <div class="form-group col-12 col-md-3 mb-3">
+                <label for="death-rate">Annual Death Rate:</label>
+                <input type="number" id="death-rate" name="death_rate" class="form-control" placeholder="Enter deaths/1000 people">
+              </div>
+              <div class="form-group col-12 col-md-3 mb-3">
+                <label for="emigration-rate">Annual Emigration Rate:</label>
+                <input type="number" id="emigration-rate" name="emigration_rate" class="form-control" placeholder="Enter emigrations/1000 people">
+              </div>
+              <div class="form-group col-12 col-md-3 mb-3">
+                <label for="immigration-rate">Annual Immigration Rate:</label>
+                <input type="number" id="immigration-rate" name="immigration_rate" class="form-control" placeholder="Enter immigrations/1000 people">
+              </div>
+            </div>
+          </div>
+          
+          <div id="cohort-options"  style="display: none; border: 1px inset; padding: 8px; margin-top:10px">
+            <!-- Cohort-Component options content -->
+            <p>Cohort-Component Options</p>
+          </div>
+
+          
+         
+          <button id="clc" class="btn btn-dark mt-4">Calculate</button>
+          <button class="btn btn-warning mt-4" style="margin-left: 12px;">Reset</button>
+        </div>
+      </div>
+      <button id="toggle-view" class="btn btn-primary" style="display: none;">Show graph</button>
+      <div id="chart-container" style="display: none;">
+        <canvas id="summedChart"></canvas>
+      </div>
+      <div id="results-section" class="mt-4" style="display: none;">
+        <h4 class="mb-3">Population Forecasting Results</h4>
+        <div id="results-container">
+          <!-- Results tables will be dynamically inserted here -->
+        </div>
+      </div>
+      <div id="results-section-growth" class="mt-4" style="display: none;">
+        <h4 class="mb-3">Population Growth with respect to base year 2011</h4>
+        <div id="results-container2">
+          <!--Growth Results tables will be dynamically inserted here -->
+        </div>
+      </div>
+      <!-- Next Stage Button (Always Visible) -->
+      <button id="next-stage-btn" type="button" class="btn btn-primary mt-4">Next Stage: Water Demand</button>
+    </form>
+  </div>
+
+  <!-- Water Demand Section (Hidden by default, on the same page) -->
+  <div id="water-demand-stage" class="container-2 my-5" style="border: 1.5px solid; display: none;">
+    <h3 class="text-center mb-4" style="color: #00ccff;">Water Demand Calculation</h3>
+    <p>The predicted population from the previous stage will be used for the calculation.</p>
+    <!-- Previous Stage Button -->
+    <button id="prev-stage-btn" type="button" class="btn btn-secondary mb-3">Previous Stage: Population Forecasting</button>
+    <div class="form-group mb-3">
+      <label>Select Water Demand Components:</label>
+      <div>
+        <input type="checkbox" id="domestic" name="water_demand" value="domestic">
+        <label for="domestic">Domestic</label>
+      </div>
+      <div>
+        <input type="checkbox" id="floating" name="water_demand" value="floating">
+        <label for="floating">Floating</label>
+      </div>
+      <div>
+        <input type="checkbox" id="institutional" name="water_demand" value="institutional">
+        <label for="institutional">Institutional</label>
+      </div>
+      <div>
+        <input type="checkbox" id="firefighting" name="water_demand" value="firefighting">
+        <label for="firefighting">Firefighting</label>
+      </div>
+    </div>
+    <!-- Floating Fields (Hidden by default) -->
+    <div class="box floating-fields-container mb-3 hidden">
+      <h6><b>Floating Fields</b></h6>
+      <label for="enu_dropdown" class="form-label">Enumeration Type:</label>
+      <select id="enu_dropdown" name="enu_dropdown" class="form-select">
+        <option value="Total">Select option</option>
+        <option value="Total">Total</option>
+        <option value="Urban">Urban</option>
+        <option value="Rural">Rural</option>
+      </select>
+      <label for="floating_field" class="form-label">Floating Population (2011):</label>
+      <input id="floating_field" name="floating_field" type="text" class="form-control" placeholder="Enter floating population">
+      <label for="facility_dropdown" class="form-label">Facility Type:</label>
+      <select id="facility_dropdown" name="facility_dropdown" class="form-select">
+        <option value="provided">Bathing facilities provided</option>
+        <option value="notprovided">Bathing facilities not provided</option>
+        <option value="onlypublic">Floating population using only public facilities</option>
+      </select>
+    </div>
+    <!-- Institutional Fields (Hidden by default) -->
+    <div id="institutional_container" class="box hidden">
+      <h6><b>Institutional Fields</b></h6>
+      <!-- Hospitals Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="hospitals_100_units" class="form-label">Hospitals with ≥ 100 Beds (Units):</label>
+          <input type="number" id="hospitals_100_units" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="beds_100" class="form-label">Beds in Hospitals with ≥ 100 Beds:</label>
+          <input type="number" id="beds_100" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="hospitals_less_100" class="form-label">Hospitals with < 100 Beds (Units):</label>
+          <input type="number" id="hospitals_less_100" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="beds_less_100" class="form-label">Beds in Hospitals with < 100 Beds:</label>
+          <input type="number" id="beds_less_100" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Hotels Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="hotels" class="form-label">Hotels (Units):</label>
+          <input type="number" id="hotels" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="beds_hotels" class="form-label">Beds in Hotels:</label>
+          <input type="number" id="beds_hotels" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Hostels Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="hostels" class="form-label">Hostels (Units):</label>
+          <input type="number" id="hostels" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="residents_hostels" class="form-label">Residents in Hostels:</label>
+          <input type="number" id="residents_hostels" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Nurses Home Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="nurses_home" class="form-label">Nurses Home (Units):</label>
+          <input type="number" id="nurses_home" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="residents_nurses_home" class="form-label">Residents in Nurses Home:</label>
+          <input type="number" id="residents_nurses_home" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Boarding Schools Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="boarding_schools" class="form-label">Boarding Schools/Colleges (Units):</label>
+          <input type="number" id="boarding_schools" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="students_boarding_schools" class="form-label">Number of Students:</label>
+          <input type="number" id="students_boarding_schools" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Restaurants Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="restaurants" class="form-label">Restaurants (Units):</label>
+          <input type="number" id="restaurants" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="seats_restaurants" class="form-label">Seats in Restaurants:</label>
+          <input type="number" id="seats_restaurants" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Airports Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="airports_seaports" class="form-label">Airports/Seaports (Units):</label>
+          <input type="number" id="airports_seaports" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_airports" class="form-label">Population Load:</label>
+          <input type="number" id="population_load_airports" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Stations Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="junction_stations" class="form-label">Junction/Intermediate Stations (Units):</label>
+          <input type="number" id="junction_stations" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_junction" class="form-label">Population Load:</label>
+          <input type="number" id="population_load_junction" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="terminal_stations" class="form-label">Terminal Stations (Units):</label>
+          <input type="number" id="terminal_stations" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_terminal" class="form-label">Population Load:</label>
+          <input type="number" id="population_load_terminal" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Intermediate Stations Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="intermediate_bathing" class="form-label">With Bathing Facility:</label>
+          <input type="number" id="intermediate_bathing" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_bathing" class="form-label">Population Load (With Bathing Facility):</label>
+          <input type="number" id="population_load_bathing" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="intermediate_no_bathing" class="form-label">Without Bathing Facility:</label>
+          <input type="number" id="intermediate_no_bathing" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_no_bathing" class="form-label">Population Load (Without Bathing Facility):</label>
+          <input type="number" id="population_load_no_bathing" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Day Schools Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="day_schools" class="form-label">Day Schools/Colleges (Units):</label>
+          <input type="number" id="day_schools" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="students_day_schools" class="form-label">Number of Students:</label>
+          <input type="number" id="students_day_schools" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Offices Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="offices" class="form-label">Offices (Units):</label>
+          <input type="number" id="offices" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="employees_offices" class="form-label">Employees:</label>
+          <input type="number" id="employees_offices" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Factories Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="factories_bathroom" class="form-label">With Bathroom Facility:</label>
+          <input type="number" id="factories_bathroom" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="employees_factories_bathroom" class="form-label">Employees (With Bathroom Facility):</label>
+          <input type="number" id="employees_factories_bathroom" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="factories_no_bathroom" class="form-label">Without Bathroom Facility:</label>
+          <input type="number" id="factories_no_bathroom" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="employees_factories_no_bathroom" class="form-label">Employees (Without Bathroom Facility):</label>
+          <input type="number" id="employees_factories_no_bathroom" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+      <!-- Cinemas Section -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="cinemas" class="form-label">Cinemas/Concert Halls/Theatres (Units):</label>
+          <input type="number" id="cinemas" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_cinemas" class="form-label">Population Load:</label>
+          <input type="number" id="population_load_cinemas" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+    </div>
+    <!-- Firefighting Fields (Hidden by default) -->
+    <div id="firefighting_container" class="box hidden">
+      <h6><b>Firefighting Fields</b></h6>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="intermediate_stage" class="form-label">Intermediate stage (Enter 15 for intermediate &amp; 30 for ultimate stage):</label>
+          <input type="number" id="intermediate_stage" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_intermediate" class="form-label">Population at Intermediate stage:</label>
+          <input type="number" id="population_load_intermediate" class="form-control" placeholder="Enter number">
+        </div>
+        <div class="col-md-6">
+          <label for="operational_zone" class="form-label">Name of Operational Zone:</label>
+          <input type="text" id="operational_zone" class="form-control" placeholder="Enter name">
+        </div>
+        <div class="col-md-6">
+          <label for="population_load_operational" class="form-label">Population at Operational Zone:</label>
+          <input type="number" id="population_load_operational" class="form-control" placeholder="Enter number">
+        </div>
+      </div>
+    </div>
+    <button id="calculate-water-demand" type="button" class="btn btn-dark">Calculate Water Demand</button>
+    <div id="water-demand-result" class="mt-3" style="font-weight: bold;"></div>
+
+    <!-- Next Stage Button for Water Supply (placed at bottom) -->
+    <button id="next-to-supply-btn" type="button" class="btn btn-primary mt-4">Next Stage: Water Supply</button>
+  </div>
+
+  <!-- Water Supply Stage -->
+  <div id="water-supply-stage" class="container-2 my-5" style="border: 1.5px solid; display: none;">
+    <h3 class="text-center mb-4" style="color: #009900;">Water Supply Calculation</h3>
+    <p>Enter water supply related data below:</p>
+    <!-- Navigation Button -->
+    <button id="prev-to-demand-btn" type="button" class="btn btn-secondary mb-3">Previous Stage: Water Demand</button>
+    <!-- Water Supply Input Fields -->
+    <!-- Surface Water Supply (SWS) -->
+    <h5>Surface Water Supply (SWS)</h5>
+    <div class="border rounded p-3 mb-3" style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
+      <div class="col-md-4">
+        <label for="surface_water" class="form-label">Surface Water Supply (SWS) (in MLD):</label>
+        <input type="number" id="surface_water" name="surface_water" class="form-control" min="0">
+      </div>
+    </div>
+
+    <!-- Groundwater Supply (GWS) -->
+    <h5>Groundwater Supply (GWS)</h5>
+    <div class="border rounded p-3 mb-3" style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="direct_groundwater" class="form-label">Direct Groundwater Supply (in MLD):</label>
+          <input type="number" id="direct_groundwater" name="direct_groundwater" class="form-control" min="0">
+        </div>
+      </div>
+      <h6 class="text-center">OR</h6>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="num_tubewells" class="form-label">Number of Tube-wells:</label>
+          <input type="number" id="num_tubewells" name="num_tubewells" class="form-control" min="0">
+        </div>
+        <div class="col-md-4">
+          <label for="discharge_rate" class="form-label">Discharge Rate:</label>
+          <input type="number" id="discharge_rate" name="discharge_rate" class="form-control" min="0">
+        </div>
+        <div class="col-md-4">
+          <label for="operating_hours" class="form-label">Operating Hours:</label>
+          <input type="number" id="operating_hours" name="operating_hours" class="form-control" min="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Alternate Water Supply (AWS) -->
+    <h5>Alternate Water Supply (AWS)</h5>
+    <div class="border rounded p-3 mb-3" style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="direct_alternate" class="form-label">Direct Alternate Water Supply (in MLD):</label>
+          <input type="number" id="direct_alternate" name="direct_alternate" class="form-control" min="0">
+        </div>
+      </div>
+      <h6 class="text-center">OR</h6>
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="rooftop_tank" class="form-label">Roof-top Harvesting (Rain-tank Storage) (MLD):</label>
+          <input type="number" id="rooftop_tank" name="rooftop_tank" class="form-control" min="0">
+        </div>
+        <div class="col-md-4">
+          <label for="aquifer_recharge" class="form-label">Roof-top Harvesting (Aquifer Recharge) (MLD):</label>
+          <input type="number" id="aquifer_recharge" name="aquifer_recharge" class="form-control" min="0">
+        </div>
+        <div class="col-md-4">
+          <label for="surface_runoff" class="form-label">Surface Runoff Storage (MLD):</label>
+          <input type="number" id="surface_runoff" name="surface_runoff" class="form-control" min="0">
+        </div>
+        <div class="col-md-4">
+          <label for="reuse_water" class="form-label">Reuse Potential of Treated Wastewater (MLD):</label>
+          <input type="number" id="reuse_water" name="reuse_water" class="form-control" min="0">
+        </div>
+      </div>
+    </div>
+    <!-- Calculate Water Supply Button and Output -->
+    <button id="calculate-water-supply" type="button" class="btn btn-dark">Calculate Water Supply</button>
+    <div id="water-supply-result" class="mt-3" style="font-weight: bold;"></div>
+
+    <!-- Next Stage: Sewage -->
+    <button id="next-to-sewage-btn" type="button" class="btn btn-primary mt-4">
+      Next Stage: Sewage
+    </button>
+  </div>
+
+  <!-- Sewage Stage -->
+  <div id="sewage-stage" class="container-2 my-5" style="border: 1.5px solid; display: none;">
+    <h3 class="text-center mb-4" style="color: #990099;">Sewage Calculation</h3>
+    <p>Select method for Sewage Calculation:</p>
+
+    <!-- Prev Stage: Water Supply -->
+    <button id="prev-to-supply-btn" type="button" class="btn btn-secondary mb-3">
+      Previous Stage: Water Supply
+    </button>
+
+    <div class="mb-3">
+      <label for="sewage_method" class="form-label">Select Sewage Method:</label>
+      <select id="sewage_method" class="form-select">
+        <option value="">-- Choose Method --</option>
+        <option value="domestic_sewage">Domestic Sewage load estimation</option>
+        <option value="water_supply">Water Supply</option>
+      </select>
+    </div>
+
+    <!-- If "Water Supply" is chosen -->
+    <div id="water_supply_fields" class="hidden">
+      <label for="total_supply_input" class="form-label">Total Water Supply (MLD):</label>
+      <input type="number" id="total_supply_input" class="form-control" placeholder="Enter total supply" min="0">
+    </div>
+
+    <!-- If "Domestic Sewage load estimation" is chosen -->
+    <div id="domestic_sewage_fields" class="hidden">
+      <label for="domestic_load_method" class="form-label">Select sector:</label>
+      <select id="domestic_load_method" class="form-select">
+        <option value="">-- Choose Option --</option>
+        <option value="modeled">Modeled</option>
+        <option value="manual">Manual</option>
+      </select>
+
+      <!-- If "manual" is chosen -->
+      <div id="manual_fields" class="hidden">
+        <label for="domestic_supply_input" class="form-label">Domestic Water Supply (MLD):</label>
+        <input type="number" id="domestic_supply_input" class="form-control" placeholder="Enter domestic supply" min="0">
+      </div>
+
+      <!-- If "modeled" is chosen -->
+      <div id="modeled_fields" class="hidden">
+        <label for="unmetered_supply_input" class="form-label">Unmetered Water Supply (optional):</label>
+        <input type="number" id="unmetered_supply_input" class="form-control" placeholder="Enter unmetered supply" min="0">
+        <!-- We'll compute using computedPopulation. -->
+      </div>
+    </div>
+
+    <!-- Calculate Sewage Button & Output -->
+    <button id="calculate-sewage" type="button" class="btn btn-dark mt-3">Calculate Sewage</button>
+    <div id="sewage-result" class="mt-3" style="font-weight: bold;"></div>
+
+    <!-- New Button: Raw Sewage Characteristics -->
+    <button id="raw-sewage-btn" type="button" class="btn btn-info mt-3">Raw Sewage Characteristics</button>
+    <!-- Container for Pollution Load Table -->
+    <div id="pollution-load-container" class="mt-3"></div>
+
+    <button id="download-pdf-btn" type="button" class="btn btn-success mt-4">Download PDF</button>
+
+  </div>
+</div>
+
+<!-- Inline Script for Persistent Info, Stage Transition, Water Demand Calculation, and Toggling Extra Fields -->
+<script>
+
+  
+  // Update persistent information panel
+  function updatePersistentInfo() {
+    const stateDropdown = document.getElementById('state');
+    const districtDropdown = document.getElementById('district');
+    const subdistrictDropdown = document.getElementById('subdistrict');
+    const villageCheckboxes = document.querySelectorAll('#town-village-container input[type="checkbox"]:checked');
+    
+    const stateText = stateDropdown.options[stateDropdown.selectedIndex]?.text || "State";
+    const districtText = districtDropdown.options[districtDropdown.selectedIndex]?.text || "District";
+    const subdistrictText = subdistrictDropdown.options[subdistrictDropdown.selectedIndex]?.text || "Sub-District";
+    
+    const villageNames = Array.from(villageCheckboxes)
+      .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+      .filter(name => name !== "")
+      .join(', ') || "Village";
+    
+    let yearText = "Year";
+    const yearOption = document.querySelector('input[name="year_selection"]:checked')?.value;
+    if (yearOption === "single") {
+      yearText = document.getElementById('target-year').value || "Year";
+    } else if (yearOption === "range") {
+      const start = document.getElementById('target-year-range-start').value;
+      const end = document.getElementById('target-year-range-end').value;
+      yearText = start && end ? `${start} to ${end}` : "Year";
+    }
+    
+    document.getElementById('selected-state').textContent = stateText;
+    document.getElementById('selected-district').textContent = districtText;
+    document.getElementById('selected-subdistrict').textContent = subdistrictText;
+    document.getElementById('selected-village').textContent = villageNames;
+    document.getElementById('selected-year').textContent = yearText;
+  }
+  
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById('state').addEventListener('change', updatePersistentInfo);
+    document.getElementById('district').addEventListener('change', updatePersistentInfo);
+    document.getElementById('subdistrict').addEventListener('change', updatePersistentInfo);
+    document.getElementById('target-year').addEventListener('input', updatePersistentInfo);
+    document.getElementById('target-year-range-start').addEventListener('input', updatePersistentInfo);
+    document.getElementById('target-year-range-end').addEventListener('input', updatePersistentInfo);
+    document.getElementById('town-village-container').addEventListener('change', updatePersistentInfo);
+  
+    // Next Stage Button: Hide population section, show water demand section
+    document.getElementById('next-stage-btn').addEventListener('click', function (e) {
+      e.preventDefault();
+      
+      // Save the selected projection forecast
+      const selectedRadio = document.querySelector('input[name="projection-method"]:checked');
+      if (!selectedRadio) {
+        alert('Please select a projection method before proceeding.');
+        return;
+      }
+      
+      const selectedMethod = selectedRadio.value;
+      console.log("Selected method:", selectedMethod);
+      
+      // Check if the global summedList is available and contains the selected method
+      if (!window.summedList || !window.summedList[selectedMethod]) {
+        alert('Forecast data for the selected method is not available.');
+        console.log("Available forecast keys:", window.summedList ? Object.keys(window.summedList) : "No summedList defined");
+        return;
+      }
+      
+      // Save the forecast data to the global computedPopulation variable
+      window.computedPopulation = window.summedList[selectedMethod];
+      console.log("Saved forecast for water demand:", window.computedPopulation);
+
+      // Check if population forecast output is calculated
+      if (typeof computedPopulation === 'undefined') {
+        // Mark the Population stage nav item as error (red)
+        let navPop = document.getElementById('nav-population');
+        navPop.classList.add('error');
+        alert('Population forecast not calculated. Please calculate before proceeding.');
+        // Optionally: return;  // Prevent transition if desired
+      } else {
+        // Remove any error styling if calculation exists
+        document.getElementById('nav-population').classList.remove('error');
+      }
+      
+      // Now transition to the Water Demand stage
+      document.getElementById('population-stage').style.display = 'none';
+      document.getElementById('water-demand-stage').style.display = 'block';
+      document.getElementById('water-demand-stage').scrollIntoView({ behavior: 'smooth' });
+      updateStageNav('water-demand');
+    });
+
+
+    // Previous Stage Button: Hide water demand section, show population section
+    document.getElementById('prev-stage-btn').addEventListener('click', function () {
+      document.getElementById('water-demand-stage').style.display = 'none';
+      document.getElementById('population-stage').style.display = 'block';
+      document.getElementById('population-stage').scrollIntoView({ behavior: 'smooth' });
+      updateStageNav('population');
+    });
+
+    // Next Stage Button for Water Supply: Hide water demand section, show water supply section
+    document.getElementById('next-to-supply-btn').addEventListener('click', function () {
+      document.getElementById('water-demand-stage').style.display = 'none';
+      document.getElementById('water-supply-stage').style.display = 'block';
+      document.getElementById('water-supply-stage').scrollIntoView({ behavior: 'smooth' });
+      updateStageNav('water-supply');
+    });
+
+    // Previous Stage Button for Water Demand: Hide water supply section, show water demand section
+    document.getElementById('prev-to-demand-btn').addEventListener('click', function () {
+      document.getElementById('water-supply-stage').style.display = 'none';
+      document.getElementById('water-demand-stage').style.display = 'block';
+      document.getElementById('water-demand-stage').scrollIntoView({ behavior: 'smooth' });
+      updateStageNav('water-demand');
+    });
+
+    document.getElementById('next-to-sewage-btn').addEventListener('click', function () {
+      document.getElementById('water-supply-stage').style.display = 'none';
+      document.getElementById('sewage-stage').style.display = 'block';
+      document.getElementById('sewage-stage').scrollIntoView({ behavior: 'smooth' });
+      updateStageNav('sewage');
+    });
+    document.getElementById('prev-to-supply-btn').addEventListener('click', function () {
+      document.getElementById('sewage-stage').style.display = 'none';
+      document.getElementById('water-supply-stage').style.display = 'block';
+      document.getElementById('water-supply-stage').scrollIntoView({ behavior: 'smooth' });
+      updateStageNav('water-supply');
+    });
+
+    // Add navigation click handlers so that clicking on a stage redirects to that stage
+    document.getElementById('nav-population').addEventListener('click', function() {
+      document.getElementById('population-stage').style.display = 'block';
+      document.getElementById('water-demand-stage').style.display = 'none';
+      document.getElementById('water-supply-stage').style.display = 'none';
+      document.getElementById('sewage-stage').style.display = 'none';
+      updateStageNav('population');
+      document.getElementById('population-stage').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('nav-demand').addEventListener('click', function() {
+      document.getElementById('population-stage').style.display = 'none';
+      document.getElementById('water-demand-stage').style.display = 'block';
+      document.getElementById('water-supply-stage').style.display = 'none';
+      document.getElementById('sewage-stage').style.display = 'none';
+      updateStageNav('water-demand');
+      document.getElementById('water-demand-stage').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('nav-supply').addEventListener('click', function() {
+      document.getElementById('population-stage').style.display = 'none';
+      document.getElementById('water-demand-stage').style.display = 'none';
+      document.getElementById('water-supply-stage').style.display = 'block';
+      document.getElementById('sewage-stage').style.display = 'none';
+      updateStageNav('water-supply');
+      document.getElementById('water-supply-stage').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('nav-sewage').addEventListener('click', function() {
+      document.getElementById('population-stage').style.display = 'none';
+      document.getElementById('water-demand-stage').style.display = 'none';
+      document.getElementById('water-supply-stage').style.display = 'none';
+      document.getElementById('sewage-stage').style.display = 'block';
+      updateStageNav('sewage');
+      document.getElementById('sewage-stage').scrollIntoView({ behavior: 'smooth' });
+    });
+
+
+    // Function to update stage navigation sidebar
+    function updateStageNav(currentStage) {
+      // Define the order of stages and a mapping to match the nav element IDs
+      const stages = ['population', 'water-demand', 'water-supply', 'sewage'];
+      const stageMap = {
+        'population': 'population',
+        'water-demand': 'demand',
+        'water-supply': 'supply',
+        'sewage': 'sewage'
+      };
+
+      stages.forEach(stage => {
+        // Use the mapping to form the correct element ID
+        const navItem = document.getElementById('nav-' + stageMap[stage]);
+        if (!navItem) {
+          console.warn(`Navigation item not found for stage: ${stage}`);
+          return;
+        }
+
+        // Set the appropriate classes based on the stage order
+        if (stage === currentStage) {
+          navItem.classList.remove('pending', 'completed');
+          navItem.classList.add('current');
+        } else {
+          if (stages.indexOf(stage) < stages.indexOf(currentStage)) {
+            navItem.classList.remove('pending', 'current');
+            navItem.classList.add('completed');
+          } else {
+            navItem.classList.remove('completed', 'current');
+            navItem.classList.add('pending');
+          }
+        }
+      });
+}
+
+
+    // Toggle extra water demand fields when corresponding checkbox is changed
+    document.getElementById('floating').addEventListener('change', function () {
+      const container = document.querySelector('.floating-fields-container');
+      if (this.checked) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    });
+    document.getElementById('institutional').addEventListener('change', function () {
+      const container = document.getElementById('institutional_container');
+      if (this.checked) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    });
+    document.getElementById('firefighting').addEventListener('change', function () {
+      const container = document.getElementById('firefighting_container');
+      if (this.checked) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    });
+  
+    // Water Demand Calculation Handler – Build one combined table with a column for each selected component.
+    document.getElementById('calculate-water-demand').addEventListener('click', async function () {
+      const resultContainer = document.getElementById('water-demand-result');
+      let outputHTML = "";
+  
+      // Determine which water demand components are selected.
+      const domesticChecked = document.getElementById('domestic').checked;
+      const floatingChecked = document.getElementById('floating').checked;
+      const institutionalChecked = document.getElementById('institutional').checked;
+      const firefightingChecked = document.getElementById('firefighting').checked;
+  
+      if (!domesticChecked && !floatingChecked && !institutionalChecked && !firefightingChecked) {
+        resultContainer.innerHTML = "<p>Please select at least one water demand component.</p>";
+        return;
+      }
+  
+      // Ensure computedPopulation is available (set by your population prediction code).
+      if (typeof computedPopulation === 'undefined') {
+        resultContainer.innerHTML = "<p>Error: Population not computed. Please calculate population first.</p>";
+        return;
+      }
+  
+      // We expect computedPopulation to be an object (time-series projection)
+      if (typeof computedPopulation === "object") {
+        // Define base population from 2011 for scaling.
+        const basePopulation = Number(computedPopulation["2011"]);
+        if (!basePopulation || basePopulation === 0) {
+          resultContainer.innerHTML = "<p>Error: 2011 population data missing in computed population.</p>";
+          return;
+        }
+  
+        // For Floating: retrieve 2011 floating population and facility multiplier.
+        let floatingPopulation2011 = 0, facilityMultiplier = 0;
+        if (floatingChecked) {
+          floatingPopulation2011 = parseFloat(document.getElementById('floating_field').value);
+          if (isNaN(floatingPopulation2011) || floatingPopulation2011 <= 0) {
+            resultContainer.innerHTML = "<p>Error: Please enter a valid floating population for 2011.</p>";
+            return;
+          }
+          const facilityType = document.getElementById('facility_dropdown').value;
+          if (facilityType === 'provided') {
+              facilityMultiplier = 45;
+          } else if (facilityType === 'notprovided') {
+              facilityMultiplier = 25;
+          } else if (facilityType === 'onlypublic') {
+              facilityMultiplier = 15;
+          } else {
+              resultContainer.innerHTML = "<p>Error: Please select a valid Facility Type for floating demand.</p>";
+              return;
+          }
+        }
+  
+        // For Institutional: compute a base 2011 value from input fields (example: hospitals*beds*450 divided by 1,000,000)
+        let institutionalBase = 0;
+        if (institutionalChecked) {
+          const hospitals_100_units = parseFloat(document.getElementById('hospitals_100_units')?.value) || 0;
+          const beds_100 = parseFloat(document.getElementById('beds_100')?.value) || 0;
+          const hospitals_less_100 = parseFloat(document.getElementById('hospitals_less_100')?.value) || 0;
+          const beds_less_100 = parseFloat(document.getElementById('beds_less_100')?.value) || 0;
+          const hotels = parseFloat(document.getElementById('hotels')?.value) || 0;
+          const beds_hotels = parseFloat(document.getElementById('beds_hotels')?.value) || 0;
+          const hostels = parseFloat(document.getElementById('hostels')?.value) || 0;
+          const residents_hostels = parseFloat(document.getElementById('residents_hostels')?.value) || 0;
+          const nurses_home = parseFloat(document.getElementById('nurses_home')?.value) || 0;
+          const residents_nurses_home = parseFloat(document.getElementById('residents_nurses_home')?.value) || 0;
+          const boarding_schools = parseFloat(document.getElementById('boarding_schools')?.value) || 0;
+          const students_boarding_schools = parseFloat(document.getElementById('students_boarding_schools')?.value) || 0;
+          const restaurants = parseFloat(document.getElementById('restaurants')?.value) || 0;
+          const seats_restaurants = parseFloat(document.getElementById('seats_restaurants')?.value) || 0;
+          const airports_seaports = parseFloat(document.getElementById('airports_seaports')?.value) || 0;
+          const population_load_airports = parseFloat(document.getElementById('population_load_airports')?.value) || 0;
+          const junction_stations = parseFloat(document.getElementById('junction_stations')?.value) || 0;
+          const population_load_junction = parseFloat(document.getElementById('population_load_junction')?.value) || 0;
+          const terminal_stations = parseFloat(document.getElementById('terminal_stations')?.value) || 0;
+          const population_load_terminal = parseFloat(document.getElementById('population_load_terminal')?.value) || 0;
+          const intermediate_bathing = parseFloat(document.getElementById('intermediate_bathing')?.value) || 0;
+          const population_load_bathing = parseFloat(document.getElementById('population_load_bathing')?.value) || 0;
+          const intermediate_no_bathing = parseFloat(document.getElementById('intermediate_no_bathing')?.value) || 0;
+          const population_load_no_bathing = parseFloat(document.getElementById('population_load_no_bathing')?.value) || 0;
+          const day_schools = parseFloat(document.getElementById('day_schools')?.value) || 0;
+          const students_day_schools = parseFloat(document.getElementById('students_day_schools')?.value) || 0;
+          const offices = parseFloat(document.getElementById('offices')?.value) || 0;
+          const employees_offices = parseFloat(document.getElementById('employees_offices')?.value) || 0;
+          const factories_bathroom = parseFloat(document.getElementById('factories_bathroom')?.value) || 0;
+          const employees_factories_bathroom = parseFloat(document.getElementById('employees_factories_bathroom')?.value) || 0;
+          const factories_no_bathroom = parseFloat(document.getElementById('factories_no_bathroom')?.value) || 0;
+          const employees_factories_no_bathroom = parseFloat(document.getElementById('employees_factories_no_bathroom')?.value) || 0;
+          const cinemas = parseFloat(document.getElementById('cinemas')?.value) || 0;
+          const population_load_cinemas = parseFloat(document.getElementById('population_load_cinemas')?.value) || 0;
+  
+          institutionalBase = (
+            (hospitals_100_units * beds_100 * 450) +
+            (hospitals_less_100 * beds_less_100 * 350) +
+            (hotels * beds_hotels * 180) +
+            (hostels * residents_hostels * 135) +
+            (nurses_home * residents_nurses_home * 135) +
+            (boarding_schools * students_boarding_schools * 135) +
+            (restaurants * seats_restaurants * 70) +
+            (airports_seaports * population_load_airports * 70) +
+            (junction_stations * population_load_junction * 70) +
+            (terminal_stations * population_load_terminal * 45) +
+            (intermediate_bathing * population_load_bathing * 45) +
+            (intermediate_no_bathing * population_load_no_bathing * 25) +
+            (day_schools * students_day_schools * 45) +
+            (offices * employees_offices * 45) +
+            (factories_bathroom * employees_factories_bathroom * 45) +
+            (factories_no_bathroom * employees_factories_no_bathroom * 30) +
+            (cinemas * population_load_cinemas * 15)
+          ) / 1000000;
+        }
+  
+        // For Firefighting: compute a base 2011 value from input fields (dummy calculation; adjust as needed)
+        let firefightingBase = 0;
+        if (firefightingChecked) {
+          const population_load_operational = parseFloat(document.getElementById('population_load_operational')?.value) || 0;
+          firefightingBase = Math.sqrt(population_load_operational / 1000000);
+        }
+  
+        // Build table header
+        outputHTML += `
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Population</th>`;
+        if (domesticChecked) { outputHTML += `<th>Domestic Water Demand (MLD)</th>`; }
+        if (floatingChecked) { outputHTML += `<th>Floating Water Demand (MLD)</th>`; }
+        if (institutionalChecked) { outputHTML += `<th>Institutional Water Demand (MLD)</th>`; }
+        if (firefightingChecked) { outputHTML += `<th>Firefighting Water Demand (MLD)</th>`; }
+        outputHTML += `<th>Total Demand (MLD)</th>`;
+        outputHTML += `</tr></thead><tbody>`;
+  
+        // Loop over each projection year in computedPopulation.
+        for (let yr in computedPopulation) {
+          let popValue = Number(computedPopulation[yr]);
+          outputHTML += `<tr><td>${yr}</td><td>${popValue.toLocaleString()}</td>`;
+          let totalDemand = 0;
+          // Domestic Water Demand: use multiplier based on popValue.
+          if (domesticChecked) {
+            let domesticMultiplier;
+            if (popValue > 1000000) {
+              domesticMultiplier = 150 / 1000000;
+            } else if (popValue < 100000) {
+              domesticMultiplier = 135 / 1000000;
+            } else {
+              domesticMultiplier = 135/1000000;
+            }
+            let domesticDemand = popValue * domesticMultiplier;
+            totalDemand += domesticDemand;
+            outputHTML += `<td>${domesticDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
+          }
+          // Floating Water Demand: scale 2011 floating population by (popValue / basePopulation)
+          if (floatingChecked) {
+            let scaledFloating = floatingPopulation2011 * (popValue / basePopulation);
+            let floatingDemand = scaledFloating * facilityMultiplier / 1000000;
+            totalDemand += floatingDemand;
+            outputHTML += `<td>${floatingDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
+          }
+          // Institutional Water Demand: scale base value by (popValue / basePopulation)
+          if (institutionalChecked) {
+            let institutionalDemand = institutionalBase * (popValue / basePopulation);
+            totalDemand += institutionalDemand;
+            outputHTML += `<td>${institutionalDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
+          }
+          // Firefighting Water Demand: scale base value by (popValue / basePopulation)
+          if (firefightingChecked) {
+            let firefightingDemand = firefightingBase * (popValue / basePopulation);
+            totalDemand += firefightingDemand;
+            outputHTML += `<td>${firefightingDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
+          }
+          outputHTML += `<td>${totalDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td></tr>`;
+        }
+        outputHTML += `</tbody></table> </div>`;
+        resultContainer.innerHTML = outputHTML;
+      } else if (typeof computedPopulation === "number") {
+        // For single-year prediction
+        let popValue = Number(computedPopulation);
+        outputHTML += `<div class="table-responsive"> <table class="table table-bordered table-striped"><thead><tr>
+          <th>Year</th><th>Population</th>`;
+        if (domesticChecked) { outputHTML += `<th>Domestic Water Demand</th>`; }
+        if (floatingChecked) { outputHTML += `<th>Floating Water Demand</th>`; }
+        if (institutionalChecked) { outputHTML += `<th>Institutional Water Demand</th>`; }
+        if (firefightingChecked) { outputHTML += `<th>Firefighting Water Demand</th>`; }
+        outputHTML += `<th>Total Demand (MLD)</th></tr></thead><tbody>`;
+  
+        outputHTML += `<tr><td>Single Year</td><td>${popValue.toLocaleString()}</td>`;
+        let totalDemand = 0;
+        if (domesticChecked) {
+          let domesticMultiplier;
+          if (popValue > 1000000) {
+            domesticMultiplier = 150 / 1000000;
+          } else if (popValue > 100000) {
+            domesticMultiplier = 135 / 1000000;
+          } else {
+            domesticMultiplier = 135;
+          }
+          let domesticDemand = popValue * domesticMultiplier;
+          totalDemand += domesticDemand;
+          outputHTML += `<td>${domesticDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
+        }
+        if (floatingChecked) {
+          const floatingPopulation2011 = parseFloat(document.getElementById('floating_field').value);
+          const facilityType = document.getElementById('facility_dropdown').value;
+          let facilityMultiplier;
+          if (facilityType === 'provided') {
+              facilityMultiplier = 45;
+          } else if (facilityType === 'notprovided') {
+              facilityMultiplier = 25;
+          } else if (facilityType === 'onlypublic') {
+              facilityMultiplier = 15;
+          } else {
+              facilityMultiplier = 0;
+          }
+          let floatingDemand = floatingPopulation2011 * facilityMultiplier / 1000000;
+          totalDemand += floatingDemand;
+          outputHTML += `<td>${floatingDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })} MLD</td>`;
+        }
+        if (institutionalChecked) {
+          const hospitals_100_units = parseFloat(document.getElementById('hospitals_100_units')?.value) || 0;
+          const beds_100 = parseFloat(document.getElementById('beds_100')?.value) || 0;
+          const hospitals_less_100 = parseFloat(document.getElementById('hospitals_less_100')?.value) || 0;
+          const beds_less_100 = parseFloat(document.getElementById('beds_less_100')?.value) || 0;
+          const hotels = parseFloat(document.getElementById('hotels')?.value) || 0;
+          const beds_hotels = parseFloat(document.getElementById('beds_hotels')?.value) || 0;
+          const hostels = parseFloat(document.getElementById('hostels')?.value) || 0;
+          const residents_hostels = parseFloat(document.getElementById('residents_hostels')?.value) || 0;
+          const nurses_home = parseFloat(document.getElementById('nurses_home')?.value) || 0;
+          const residents_nurses_home = parseFloat(document.getElementById('residents_nurses_home')?.value) || 0;
+          const boarding_schools = parseFloat(document.getElementById('boarding_schools')?.value) || 0;
+          const students_boarding_schools = parseFloat(document.getElementById('students_boarding_schools')?.value) || 0;
+          const restaurants = parseFloat(document.getElementById('restaurants')?.value) || 0;
+          const seats_restaurants = parseFloat(document.getElementById('seats_restaurants')?.value) || 0;
+          const airports_seaports = parseFloat(document.getElementById('airports_seaports')?.value) || 0;
+          const population_load_airports = parseFloat(document.getElementById('population_load_airports')?.value) || 0;
+          const junction_stations = parseFloat(document.getElementById('junction_stations')?.value) || 0;
+          const population_load_junction = parseFloat(document.getElementById('population_load_junction')?.value) || 0;
+          const terminal_stations = parseFloat(document.getElementById('terminal_stations')?.value) || 0;
+          const population_load_terminal = parseFloat(document.getElementById('population_load_terminal')?.value) || 0;
+          const intermediate_bathing = parseFloat(document.getElementById('intermediate_bathing')?.value) || 0;
+          const population_load_bathing = parseFloat(document.getElementById('population_load_bathing')?.value) || 0;
+          const intermediate_no_bathing = parseFloat(document.getElementById('intermediate_no_bathing')?.value) || 0;
+          const population_load_no_bathing = parseFloat(document.getElementById('population_load_no_bathing')?.value) || 0;
+          const day_schools = parseFloat(document.getElementById('day_schools')?.value) || 0;
+          const students_day_schools = parseFloat(document.getElementById('students_day_schools')?.value) || 0;
+          const offices = parseFloat(document.getElementById('offices')?.value) || 0;
+          const employees_offices = parseFloat(document.getElementById('employees_offices')?.value) || 0;
+          const factories_bathroom = parseFloat(document.getElementById('factories_bathroom')?.value) || 0;
+          const employees_factories_bathroom = parseFloat(document.getElementById('employees_factories_bathroom')?.value) || 0;
+          const factories_no_bathroom = parseFloat(document.getElementById('factories_no_bathroom')?.value) || 0;
+          const employees_factories_no_bathroom = parseFloat(document.getElementById('employees_factories_no_bathroom')?.value) || 0;
+          const cinemas = parseFloat(document.getElementById('cinemas')?.value) || 0;
+          const population_load_cinemas = parseFloat(document.getElementById('population_load_cinemas')?.value) || 0;
+          let institutionalDemand = (
+            (hospitals_100_units * beds_100 * 450) +
+            (hospitals_less_100 * beds_less_100 * 350) +
+            (hotels * beds_hotels * 180) +
+            (hostels * residents_hostels * 135) +
+            (nurses_home * residents_nurses_home * 135) +
+            (boarding_schools * students_boarding_schools * 135) +
+            (restaurants * seats_restaurants * 70) +
+            (airports_seaports * population_load_airports * 70) +
+            (junction_stations * population_load_junction * 70) +
+            (terminal_stations * population_load_terminal * 45) +
+            (intermediate_bathing * population_load_bathing * 45) +
+            (intermediate_no_bathing * population_load_no_bathing * 25) +
+            (day_schools * students_day_schools * 45) +
+            (offices * employees_offices * 45) +
+            (factories_bathroom * employees_factories_bathroom * 45) +
+            (factories_no_bathroom * employees_factories_no_bathroom * 30) +
+            (cinemas * population_load_cinemas * 15)
+          ) / 1000000;
+          totalDemand += institutionalDemand;
+          outputHTML += `<td>${institutionalDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })} MLD</td>`;
+        }
+        if (firefightingChecked) {
+          const population_load_operational = parseFloat(document.getElementById('population_load_operational')?.value) || 0;
+          let firefightingDemand = Math.sqrt(population_load_operational / 1000000);
+          totalDemand += firefightingDemand;
+          outputHTML += `<td>${firefightingDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })} MLD</td>`;
+        }
+        outputHTML += `<td>${totalDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })} MLD</td></tr>`;
+        outputHTML += `</tbody></table> </div>`;
+        resultContainer.innerHTML = outputHTML;
+      }
+    });
+
+    // Water Supply Calculation Logic
+    const directGroundwaterInput = document.getElementById('direct_groundwater');
+    const numTubewells = document.getElementById('num_tubewells');
+    const dischargeRate = document.getElementById('discharge_rate');
+    const operatingHours = document.getElementById('operating_hours');
+    const directAlternateInput = document.getElementById('direct_alternate');
+    const rooftopTankInput = document.getElementById('rooftop_tank');
+    const aquiferRechargeInput = document.getElementById('aquifer_recharge');
+    const surfaceRunoffInput = document.getElementById('surface_runoff');
+    const reuseWaterInput = document.getElementById('reuse_water');
+    const calculateWaterSupplyBtn = document.getElementById('calculate-water-supply');
+    const waterSupplyResult = document.getElementById('water-supply-result');
+  
+    function updateGroundwaterDisableState() {
+      if (directGroundwaterInput.value.trim() !== "") {
+        numTubewells.disabled = true;
+        dischargeRate.disabled = true;
+        operatingHours.disabled = true;
+      } else if (numTubewells.value.trim() !== "" ||
+                 dischargeRate.value.trim() !== "" ||
+                 operatingHours.value.trim() !== "") {
+        directGroundwaterInput.disabled = true;
+        numTubewells.disabled = false;
+        dischargeRate.disabled = false;
+        operatingHours.disabled = false;
+      } else {
+        directGroundwaterInput.disabled = false;
+        numTubewells.disabled = false;
+        dischargeRate.disabled = false;
+        operatingHours.disabled = false;
+      }
+    }
+    directGroundwaterInput.addEventListener("input", updateGroundwaterDisableState);
+    numTubewells.addEventListener("input", updateGroundwaterDisableState);
+    dischargeRate.addEventListener("input", updateGroundwaterDisableState);
+    operatingHours.addEventListener("input", updateGroundwaterDisableState);
+  
+    function updateAlternateDisableState() {
+      if (directAlternateInput.value.trim() !== "") {
+        rooftopTankInput.disabled = true;
+        aquiferRechargeInput.disabled = true;
+        surfaceRunoffInput.disabled = true;
+        reuseWaterInput.disabled = true;
+      } else if (rooftopTankInput.value.trim() !== "" ||
+                 aquiferRechargeInput.value.trim() !== "" ||
+                 surfaceRunoffInput.value.trim() !== "" ||
+                 reuseWaterInput.value.trim() !== "") {
+        directAlternateInput.disabled = true;
+        rooftopTankInput.disabled = false;
+        aquiferRechargeInput.disabled = false;
+        surfaceRunoffInput.disabled = false;
+        reuseWaterInput.disabled = false;
+      } else {
+        directAlternateInput.disabled = false;
+        rooftopTankInput.disabled = false;
+        aquiferRechargeInput.disabled = false;
+        surfaceRunoffInput.disabled = false;
+        reuseWaterInput.disabled = false;
+      }
+    }
+    directAlternateInput.addEventListener("input", updateAlternateDisableState);
+    rooftopTankInput.addEventListener("input", updateAlternateDisableState);
+    aquiferRechargeInput.addEventListener("input", updateAlternateDisableState);
+    surfaceRunoffInput.addEventListener("input", updateAlternateDisableState);
+    reuseWaterInput.addEventListener("input", updateAlternateDisableState);
+  
+    calculateWaterSupplyBtn.addEventListener('click', () => {
+      waterSupplyResult.innerHTML = '<h5 class="text-primary">Calculating Water Supply...</h5>';
+      setTimeout(() => {
+        const surfaceWater = parseFloat(document.getElementById('surface_water').value) || 0;
+        const directGroundwaterValue = parseFloat(directGroundwaterInput.value) || 0;
+        const numTubewellsValue = parseFloat(numTubewells.value) || 0;
+        const dischargeRateValue = parseFloat(dischargeRate.value) || 0;
+        const operatingHoursValue = parseFloat(operatingHours.value) || 0;
+        const groundwaterCalc = numTubewellsValue * dischargeRateValue * operatingHoursValue;
+  
+        if (directGroundwaterValue > 0 &&
+            (numTubewellsValue > 0 || dischargeRateValue > 0 || operatingHoursValue > 0)) {
+          waterSupplyResult.innerHTML = '<h4 class="text-danger">Error: Provide either direct groundwater supply or calculated groundwater supply, not both.</h4>';
+          return;
+        }
+  
+        const groundwaterSupply = directGroundwaterValue > 0 ? directGroundwaterValue : groundwaterCalc;
+  
+        const directAlternateValue = parseFloat(directAlternateInput.value) || 0;
+        const rooftopTankValue = parseFloat(rooftopTankInput.value) || 0;
+        const aquiferRechargeValue = parseFloat(aquiferRechargeInput.value) || 0;
+        const surfaceRunoffValue = parseFloat(surfaceRunoffInput.value) || 0;
+        const reuseWaterValue = parseFloat(reuseWaterInput.value) || 0;
+        const alternateCalc = rooftopTankValue + aquiferRechargeValue + surfaceRunoffValue + reuseWaterValue;
+  
+        if (directAlternateValue > 0 &&
+            (rooftopTankValue > 0 || aquiferRechargeValue > 0 || surfaceRunoffValue > 0 || reuseWaterValue > 0)) {
+          waterSupplyResult.innerHTML = '<h4 class="text-danger">Error: Provide either direct alternate supply or calculated alternate supply, not both.</h4>';
+          return;
+        }
+  
+        const alternateWaterSupply = directAlternateValue > 0 ? directAlternateValue : alternateCalc;
+  
+        const totalWaterSupply = surfaceWater + groundwaterSupply + alternateWaterSupply;
+        waterSupplyResult.innerHTML = `<h4>Total Water Supply for Selected Region: ${totalWaterSupply.toFixed(2)} MLD</h4>`;
+        console.log("Total Water Supply Calculated:", totalWaterSupply.toFixed(2));
+      }, 700);
+    });
+  
+    function togglePredictionOptions() {
+      const timeSeriesOptions = document.getElementById('time-series-options');
+      const demographicOptions = document.getElementById('demographic-options');
+      if (document.getElementById('time-series').checked) {
+        timeSeriesOptions.style.display = 'block';
+        demographicOptions.style.display = 'none';
+      } else if (document.getElementById('demographic-based').checked) {
+        timeSeriesOptions.style.display = 'none';
+        demographicOptions.style.display = 'block';
+      } else {
+        timeSeriesOptions.style.display = 'none';
+        demographicOptions.style.display = 'none';
+      }
+    }
+  
+    togglePredictionOptions();
+  
+    document.querySelectorAll('input[name="prediction_method"]').forEach(function (radio) {
+      radio.addEventListener("change", togglePredictionOptions);
+    });
+
+    // =========================
+    // Sewage Stage UI Toggling
+    // =========================
+    const sewageMethodDropdown = document.getElementById('sewage_method');
+    const waterSupplyFields = document.getElementById('water_supply_fields');
+    const domesticSewageFields = document.getElementById('domestic_sewage_fields');
+
+    const domesticLoadMethodDropdown = document.getElementById('domestic_load_method');
+    const manualFields = document.getElementById('manual_fields');
+    const modeledFields = document.getElementById('modeled_fields');
+
+    sewageMethodDropdown.addEventListener('change', function () {
+      const val = this.value;
+      if (val === 'water_supply') {
+        waterSupplyFields.classList.remove('hidden');
+        domesticSewageFields.classList.add('hidden');
+      } else if (val === 'domestic_sewage') {
+        waterSupplyFields.classList.add('hidden');
+        domesticSewageFields.classList.remove('hidden');
+      } else {
+        waterSupplyFields.classList.add('hidden');
+        domesticSewageFields.classList.add('hidden');
+      }
+    });
+
+    domesticLoadMethodDropdown.addEventListener('change', function () {
+      const val = this.value;
+      if (val === 'manual') {
+        manualFields.classList.remove('hidden');
+        modeledFields.classList.add('hidden');
+      } else if (val === 'modeled') {
+        manualFields.classList.add('hidden');
+        modeledFields.classList.remove('hidden');
+      } else {
+        manualFields.classList.add('hidden');
+        modeledFields.classList.add('hidden');
+      }
+    });
+
+    // =========================
+    // Sewage Calculation
+    // =========================
+    document.getElementById('calculate-sewage').addEventListener('click', function () {
+      const result = document.getElementById('sewage-result');
+      result.innerHTML = "";
+
+      const method = sewageMethodDropdown.value;
+      if (!method) {
+        result.innerHTML = "<p>Please select a Sewage Method.</p>";
+        return;
+      }
+
+      // 1) Water Supply approach
+      if (method === "water_supply") {
+        const totalSupply = parseFloat(document.getElementById('total_supply_input').value) || 0;
+        if (totalSupply <= 0) {
+          result.innerHTML = "<p>Error: Enter a valid total water supply.</p>";
+          return;
+        }
+        const sewageDemand = totalSupply * 0.84;
+        result.innerHTML = `Total Generated Sewage Water is: ${sewageDemand.toFixed(2)} MLD`;
+      }
+
+      // 2) Domestic Sewage approach
+      else if (method === "domestic_sewage") {
+        const sectorMethod = domesticLoadMethodDropdown.value;
+        if (!sectorMethod) {
+          result.innerHTML = "<p>Please select sector method (manual or modeled).</p>";
+          return;
+        }
+
+        // 2a) Manual
+        if (sectorMethod === "manual") {
+          const domesticVal = parseFloat(document.getElementById('domestic_supply_input').value) || 0;
+          if (domesticVal <= 0) {
+            result.innerHTML = "<p>Error: Enter a valid domestic water supply.</p>";
+            return;
+          }
+          const sewageDemand = domesticVal * 0.84;
+          result.innerHTML = `Total Generated Sewage Water is: ${sewageDemand.toFixed(2)} MLD`;
+        }
+
+        // 2b) Modeled
+        else if (sectorMethod === "modeled") {
+          // Optionally read "unmetered_supply_input" if needed
+          const unmeteredVal = parseFloat(document.getElementById('unmetered_supply_input').value) || 0;
+
+          // Must have computedPopulation
+          if (typeof computedPopulation === 'undefined') {
+            result.innerHTML = "<p>Error: Population not computed. Please calculate population first.</p>";
+            return;
+          }
+
+          // Build a table: Year, Population, Sewage Generation
+          let outputHTML = `<div class="table-responsive"> <table class="table table-bordered table-striped">
+            <thead><tr>
+              <th>Year</th>
+              <th>Population</th>
+              <th>Sewage Generation (MLD)</th>
+            </tr></thead><tbody>`;
+
+          // If multi-year
+          if (typeof computedPopulation === "object") {
+            for (let yr in computedPopulation) {
+              const popVal = Number(computedPopulation[yr]);
+              const multiplier = (135 + unmeteredVal) / 1000000;
+              const sewageGen = popVal * multiplier * 0.80;
+              outputHTML += `<tr>
+                <td>${yr}</td>
+                <td>${popVal.toLocaleString()}</td>
+                <td>${sewageGen.toFixed(2)}</td>
+              </tr>`;
+            }
+          }
+          // If single-year
+          else if (typeof computedPopulation === "number") {
+            const popVal = computedPopulation;
+            const multiplier = (135 + unmeteredVal) / 1000000;
+            const sewageGen = popVal * multiplier * 0.80;
+            outputHTML += `<tr>
+              <td>Single Year</td>
+              <td>${popVal.toLocaleString()}</td>
+              <td>${sewageGen.toFixed(2)}</td>
+            </tr>`;
+          }
+          outputHTML += `</tbody></table> </div>`;
+          result.innerHTML = outputHTML;
+        }
+      }
+    });
+    // Raw Sewage Characteristics Handler – triggered by the new button
+    document.getElementById('raw-sewage-btn').addEventListener('click', function (event) {
+      event.preventDefault();
+      // Ensure computedPopulation is available
+      if (typeof computedPopulation === 'undefined' || computedPopulation === null) {
+        alert("Population data not available.");
+        return;
+      }
+      let population;
+      if (typeof computedPopulation === 'object') {
+        population = Number(computedPopulation["2011"]);
+      } else {
+        population = Number(computedPopulation);
+      }
+      if (!population || population === 0) {
+        alert("Population data invalid.");
+        return;
+      }
+      const baseCoefficient = population >= 1000000 ? 150 : 135;
+      const unmeteredField = document.getElementById('unmetered_supply_input');
+      const unmetered = parseFloat(unmeteredField.value) || 0;
+      const totalCoefficient = (baseCoefficient + unmetered) * 0.80;
+  
+      // Build the pollution load table
+      let table = document.createElement('table');
+      table.className = "table table-striped table-bordered";
+      let thead = document.createElement('thead');
+      let trHead = document.createElement('tr');
+  
+      let thItem = document.createElement('th');
+      thItem.textContent = "Item";
+      let thPerCapita = document.createElement('th');
+      thPerCapita.textContent = "Per Capita Contribution (g/c/d)";
+      let thConcentration = document.createElement('th');
+      thConcentration.textContent = "Concentration (mg/l)";
+  
+      trHead.appendChild(thItem);
+      trHead.appendChild(thPerCapita);
+      trHead.appendChild(thConcentration);
+      thead.appendChild(trHead);
+      table.appendChild(thead);
+  
+      let tbody = document.createElement('tbody');
+  
+      const pollutionItems = [
+        { name: "BOD", perCapita: 27.0 },
+        { name: "COD", perCapita: 45.9 },
+        { name: "TSS", perCapita: 40.5 },
+        { name: "VSS", perCapita: 28.4 },
+        { name: "Total Nitrogen", perCapita: 5.4 },
+        { name: "Organic Nitrogen", perCapita: 1.4 },
+        { name: "Ammonia Nitrogen", perCapita: 3.5 },
+        { name: "Nitrate Nitrogen", perCapita: 0.5 },
+        { name: "Total Phosphorus", perCapita: 0.8 },
+        { name: "Ortho Phosphorous", perCapita: 0.5 }
+      ];
+  
+      pollutionItems.forEach((item, index) => {
+        let tr = document.createElement('tr');
+  
+        let tdItem = document.createElement('td');
+        tdItem.textContent = item.name;
+  
+        let tdPerCapita = document.createElement('td');
+        let inputPerCapita = document.createElement('input');
+        inputPerCapita.type = "number";
+        inputPerCapita.className = "form-control";
+        inputPerCapita.value = item.perCapita;
+        inputPerCapita.id = "percapita_input_" + index;
+        tdPerCapita.appendChild(inputPerCapita);
+  
+        let tdConcentration = document.createElement('td');
+        tdConcentration.id = "concentration_" + index;
+        let concentration = (item.perCapita / totalCoefficient) * 1000;
+        tdConcentration.textContent = concentration.toFixed(1);
+  
+        tr.appendChild(tdItem);
+        tr.appendChild(tdPerCapita);
+        tr.appendChild(tdConcentration);
+        tbody.appendChild(tr);
+  
+        inputPerCapita.addEventListener('input', () => {
+          let editedPerCapita = parseFloat(inputPerCapita.value) || 0;
+          let newConcentration = (editedPerCapita / totalCoefficient) * 1000;
+          tdConcentration.textContent = newConcentration.toFixed(1);
+        });
+      });
+  
+      table.appendChild(tbody);
+      // Wrap the table in a responsive container
+      let responsiveDiv = document.createElement('div');
+      responsiveDiv.className = "table-responsive";
+      responsiveDiv.appendChild(table);
+      const pollutionLoadContainer = document.getElementById('pollution-load-container');
+      pollutionLoadContainer.innerHTML = "";
+      pollutionLoadContainer.appendChild(responsiveDiv);
+    });
+
+    // Helper function to transpose an HTML table's data.
+function getTransposedTableData(tableElement) {
+  // Get rows as an array of arrays (each cell's text)
+  const rows = Array.from(tableElement.querySelectorAll("tr"));
+  const originalData = rows.map(row => {
+    return Array.from(row.querySelectorAll("th, td")).map(cell => cell.innerText.trim());
+  });
+  // Determine the maximum number of cells in any row.
+  const numCols = Math.max(...originalData.map(row => row.length));
+  // Build the transposed array.
+  let transposed = [];
+  for (let i = 0; i < numCols; i++) {
+    let newRow = [];
+    for (let j = 0; j < originalData.length; j++) {
+      newRow.push(originalData[j][i] || "");
+    }
+    transposed.push(newRow);
+  }
+  // Assume the first row of the transposed data is the header.
+  const head = [transposed[0]];
+  const body = transposed.slice(1);
+  return { head, body };
+}
+
+document.getElementById('download-pdf-btn').addEventListener('click', async function () {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  let y = 10; // starting vertical offset
+  const maxWidth = 190;
+  const lineHeight = 7; // adjust spacing as needed
+
+  // Helper: Add text with wrapping.
+  function addParagraph(text) {
+    const lines = doc.splitTextToSize(text, maxWidth);
+    doc.text(lines, 10, y);
+    y += lines.length * lineHeight;
+  }
+
+  // Helper: Add section title.
+  function addSectionTitle(title) {
+    doc.setFontSize(14);
+    addParagraph(title);
+    y += lineHeight; // extra blank line
+    doc.setFontSize(12);
+  }
+
+  // 1. Header Section
+  doc.setFontSize(18);
+  addParagraph("Comprehensive Report on Sewage Generation");
+  doc.setFontSize(10);
+  const now = new Date();
+  addParagraph(`This report was created with the Decision Support System Web App, IIT BHU on ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}. Please save this page or print to PDF, as it will not be saved on the server.`);
+  y += 5;
+
+  // 2. Persistent Information Panel
+  addSectionTitle("Persistent Information:");
+  const persistentInfo = document.getElementById("persistent-info").innerText;
+  addParagraph(persistentInfo);
+  y += 5;
+
+  // 3. Population Forecasting Results (transposed to vertical)
+  const popForecastElem = document.getElementById("results-container");
+  if (popForecastElem && popForecastElem.innerText.trim() !== "") {
+    addSectionTitle("Population Forecasting Results:");
+    const popTable = popForecastElem.querySelector("table");
+    if (popTable) {
+      const transposedPop = getTransposedTableData(popTable);
+      doc.autoTable({
+        head: transposedPop.head,
+        body: transposedPop.body,
+        startY: y,
+        theme: 'grid'
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    } else {
+      addParagraph(popForecastElem.innerText);
+    }
+    y += 5;
+  }
+
+  // 4. Population Growth Results (transposed to vertical)
+  const growthTableElem = document.getElementById("results-container2");
+  if (growthTableElem && growthTableElem.innerText.trim() !== "") {
+    addSectionTitle("Population Growth Results:");
+    const growthTable = growthTableElem.querySelector("table");
+    if (growthTable) {
+      const transposedGrowth = getTransposedTableData(growthTable);
+      doc.autoTable({
+        head: transposedGrowth.head,
+        body: transposedGrowth.body,
+        startY: y,
+        theme: 'grid'
+      });
+      y = doc.lastAutoTable.finalY + 10;
+    } else {
+      addParagraph(growthTableElem.innerText);
+    }
+    y += 5;
+  }
+
+  // 9. Add a Chart Image (if a canvas exists)
+  const chartCanvas = document.getElementById("summedChart");
+  if (chartCanvas) {
+    const imgData = chartCanvas.toDataURL("image/png");
+    if (y + 100 > 297) { // If insufficient space on current page, add a new page.
+      doc.addPage();
+      y = 10;
+    }
+    addSectionTitle("Population Projection Graph:");
+    // Adjust image dimensions as needed (here 190mm wide, 100mm tall)
+    doc.addImage(imgData, "PNG", 10, y, 190, 100);
+    y += 105;
+  }
+
+  // 5. Water Demand Calculation Results (assumed as a table if available)
+  const waterDemandElem = document.getElementById("water-demand-result");
+  if (waterDemandElem && waterDemandElem.innerText.trim() !== "") {
+    addSectionTitle("Water Demand Results:");
+    const waterDemandTable = waterDemandElem.querySelector("table");
+    if (waterDemandTable) {
+      // If you want water demand table in horizontal orientation, leave it as is.
+      doc.autoTable({ html: waterDemandTable, startY: y, theme: 'grid' });
+      y = doc.lastAutoTable.finalY + 10;
+    } else {
+      addParagraph(waterDemandElem.innerText);
+    }
+    y += 5;
+  }
+
+  // 6. Water Supply Calculation Results
+  const waterSupplyElem = document.getElementById("water-supply-result");
+  if (waterSupplyElem && waterSupplyElem.innerText.trim() !== "") {
+    addSectionTitle("Water Supply Results:");
+    const waterSupplyTable = waterSupplyElem.querySelector("table");
+    if (waterSupplyTable) {
+      doc.autoTable({ html: waterSupplyTable, startY: y, theme: 'grid' });
+      y = doc.lastAutoTable.finalY + 10;
+    } else {
+      addParagraph(waterSupplyElem.innerText);
+    }
+    y += 5;
+  }
+
+  // 7. Sewage Calculation Results
+  const sewageElem = document.getElementById("sewage-result");
+  if (sewageElem && sewageElem.innerText.trim() !== "") {
+    addSectionTitle("Sewage Calculation Results:");
+    const sewageTable = sewageElem.querySelector("table");
+    if (sewageTable) {
+      doc.autoTable({ html: sewageTable, startY: y, theme: 'grid' });
+      y = doc.lastAutoTable.finalY + 10;
+    } else {
+      addParagraph(sewageElem.innerText);
+    }
+    y += 5;
+  }
+
+  // 8. Pollution Load Table
+  const pollutionElem = document.getElementById("pollution-load-container");
+  if (pollutionElem && pollutionElem.innerText.trim() !== "") {
+    addSectionTitle("Pollution Load Table:");
+    const pollutionTable = pollutionElem.querySelector("table");
+    if (pollutionTable) {
+      doc.autoTable({ html: pollutionTable, startY: y, theme: 'grid' });
+      y = doc.lastAutoTable.finalY + 10;
+    } else {
+      addParagraph(pollutionElem.innerText);
+    }
+    y += 5;
+  }
+
+  
+
+  // 10. User Input Summary – include key input values
+  const stateValue = document.getElementById("state").value || "N/A";
+  const districtValue = document.getElementById("district").value || "N/A";
+  const subdistrictValue = document.getElementById("subdistrict").value || "N/A";
+  const targetYearValue = document.getElementById("target-year") ? document.getElementById("target-year").value : "";
+  addSectionTitle("User Input Summary:");
+  addParagraph(`State: ${stateValue} | District: ${districtValue} | Sub-District: ${subdistrictValue} | Target Year: ${targetYearValue}`);
+
+  // Save the PDF file.
+  doc.save("Comprehensive_Report_on_Sewage_Generation.pdf");
+});
+
+
+
+
+  
+    // Toggle Prediction Options for Population Prediction Methods
+    // Toggle Prediction Options for Population Prediction Methods
+    function togglePredictionOptions() {
+      const timeSeriesOptions = document.getElementById('time-series-options');
+      const demographicOptions = document.getElementById('demographic-options');
+      const cohortOptions = document.getElementById('cohort-options');
+
+      timeSeriesOptions.style.display = document.getElementById('time-series').checked ? 'block' : 'none';
+      demographicOptions.style.display = document.getElementById('demographic-based').checked ? 'block' : 'none';
+      cohortOptions.style.display = document.getElementById('cohort-component').checked ? 'block' : 'none';
+    }
+  
+    togglePredictionOptions();
+  
     document.querySelectorAll('input[name="prediction_method"]').forEach(function (radio) {
       radio.addEventListener("change", togglePredictionOptions);
     });
@@ -210,194 +1759,6 @@
 </script>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <!-- <div class="form-group col-12 col-md-8 mb-3">
-        <div>
-          <label for="projection-method">Method of Projection:</label>
-          <select id="projection-method" name="projection_method" class="form-control">
-            <option value="">Select a method</option>
-            <option value="all">All</option>
-            <option value="arithmetic-increase">Arithmetic Increase Method</option>
-            <option value="geometric-increase">Geometric Increase Method</option>
-            <option value="logistic-growth">Logistic Growth Method</option>
-            <option value="exponential-growth">Exponential Growth Method</option>
-            <option value="incremental-growth">Incremental Growth Method</option>
-          </select>
-        </div>
-        
-        <button id="clc" class="btn btn-dark mt-4">Calculate</button>
-        <button class="btn btn-warning mt-4" style="margin-left: 12px;">Reset</button>
-      </div>
-
-
-      <div id="projection-values" class="mt-3">
-        <div class="projection-view tables-view">
-          <div class="projection-item arithmetic-increase" style="display: none;">
-            <div class="container-2 my-1">
-
-              <div id="dynamic-tables-arithmetic-increase">
-       
-              </div>
-              <button id="graphbtn-arithmetic-increase" class="btn btn-info btn-sm ">Toggle graph</button>
-            </div>
-            <div class="graph-container" id="container-arithmetic-increase" style="display: none;">
-              <canvas id="graph-arithmetic-increase"></canvas>
-            </div>
-          </div>
-          <div class="projection-item geometric-increase" style="display: none;">
-            <div class="container-2 my-1">
-
-              <div id="dynamic-tables-geometric-increase">
-               
-              </div>
-              <button id="graphbtn-geometric-increase" class="btn btn-info btn-sm">Toggle graph</button>
-            </div>
-            <div class="graph-container" id="container-geometric-increase" style="display: none;">
-              <canvas id="graph-geometric-increase"></canvas>
-            </div>
-
-          </div>
-          <div class="projection-item logistic-growth" style="display: none;">
-            <div class="container-2 my-1">
-
-              <div id="dynamic-tables-logistic-growth">
-                
-              </div>
-              <button id="graphbtn-logistic-growth" class="btn btn-info btn-sm ">Toggle graph</button>
-            </div>
-            <div class="graph-container" id="container-logistic-growth" style="display: none;">
-              <canvas id="graph-logistic-growth"></canvas>
-            </div>
-
-          </div>
-          <div class="projection-item exponential-growth" style="display: none;">
-            <div class="container-2 my-1">
-
-              <div id="dynamic-tables-exponential-growth">
-               
-              </div>
-              <button id="graphbtn-exponential-growth" class="btn btn-info btn-sm ">Toggle graph</button>
-            </div>
-            <div class="graph-container" id="container-exponential-growth" style="display: none;">
-              <canvas id="graph-exponential-growth"></canvas>
-            </div>
-          </div>
-          <div class="projection-item incremental-growth" style="display: none;">
-            <div class="container-2 my-1">
-
-              <div id="dynamic-tables-incremental-growth">
-            
-              </div>
-              <button id="graphbtn-incremental-growth" class="btn btn-info btn-sm ">Toggle graph</button>
-            </div>
-            <div class="graph-container" id="container-incremental-growth" style="display: none;">
-              <canvas id="graph-incremental-growth"></canvas>
-            </div>
-          </div>
-        </div>
-      </div> -->
-
-
-    
-   
-
-
-{%endblock%}
+<!-- Include External Population Prediction Script -->
+<script src="/static/js/script1.js"></script>
+{% endblock %}
