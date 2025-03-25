@@ -67,16 +67,7 @@ def project_population_arithmetic(state_code, district_code, subdistrict_code, r
 
                 one_year[target_year] = int(population_of_target_year)
 
-                growth_percent = 0
-                try:
-                    if value != '' and population_of_target_year != '':
-                        value_int = int(value)
-                        target_year_int = int(population_of_target_year)
-                        growth_percent = ((target_year_int - value_int) / value_int) * 100
-                except (ValueError, TypeError, ZeroDivisionError):
-                    growth_percent = 0  # If conversion fails or division by zero occurs, set to 0
-
-                one_year["Growth Percent"] = round(growth_percent, 2)
+                
 
                 result['arithmetic-increase'][key] = one_year
                 
@@ -156,17 +147,7 @@ def project_population_geometric(state_code, district_code, subdistrict_code, re
             population_of_target_year = value * (math.pow((1 + (annual_growth_rate/100)), n))
             one_year[target_year] = int(population_of_target_year)
             
-            growth_percent = 0
-
-            try:
-                if value != '' and population_of_target_year != '':
-                    value_int = int(value)
-                    target_year_int = int(population_of_target_year)
-                    growth_percent = ((target_year_int - value_int) / value_int) * 100
-            except (ValueError, TypeError, ZeroDivisionError):
-                growth_percent = 0  # If conversion fails or division by zero occurs, set to 0
-
-            one_year["Growth Percent"] = round(growth_percent, 2)
+          
             
 
             result['geometric-increase'][key] = one_year    
@@ -288,17 +269,7 @@ def project_population_logistic(state_code, district_code, subdistrict_code, res
                     target_year: int(population_of_target_year)
                 }
 
-                growth_percent = 0
-                try:
-                    if value != '' and population_of_target_year != '':
-                        value_int = int(value)
-                        target_year_int = int(population_of_target_year)
-                        growth_percent = ((target_year_int - value_int) / value_int) * 100
-                except (ValueError, TypeError, ZeroDivisionError):
-                    growth_percent = 0  # If conversion fails or division by zero occurs, set to 0
-
-                one_year["Growth Percent"] = round(growth_percent, 2) if growth_percent>0 else 0
-
+                
                 result['logistic-increase'][key] = one_year
                 
             except Exception as e:
@@ -425,18 +396,7 @@ def project_population_incremental(state_code, district_code, subdistrict_code, 
             population_of_target_year = value + k*n*d_mean + ((n*(n+1))*m_mean / 2)*k
             one_year[target_year] = int(population_of_target_year)
 
-            growth_percent = 0
-
-            try:
-                if value != '' and population_of_target_year != '':
-                    value_int = int(value)
-                    target_year_int = int(population_of_target_year)
-                    growth_percent = ((target_year_int - value_int) / value_int) * 100
-            except (ValueError, TypeError, ZeroDivisionError):
-                growth_percent = 0  # If conversion fails or division by zero occurs, set to 0
-
-            one_year["Growth Percent"] = round(growth_percent, 2)
-
+           
             result['incremental-growth'][key] = one_year
 
     elif target_year_range:
@@ -524,18 +484,7 @@ def project_population_exponential(state_code, district_code, subdistrict_code, 
             population_of_target_year =  value * math.exp(growth_rate*t)
             one_year[target_year] = int(population_of_target_year)
 
-            growth_percent = 0
-
-            try:
-                if value != '' and population_of_target_year != '':
-                    value_int = int(value)
-                    target_year_int = int(population_of_target_year)
-                    growth_percent = ((target_year_int - value_int) / value_int) * 100
-            except (ValueError, TypeError, ZeroDivisionError):
-                growth_percent = 0  # If conversion fails or division by zero occurs, set to 0
-
-            one_year["Growth Percent"] = round(growth_percent, 2)
-
+           
             result['exponential-growth'][key] = one_year    
 
     elif target_year_range:
@@ -567,8 +516,7 @@ def project_population_demographic(state_code, district_code, subdistrict_code, 
             
             population_of_target_year = value + (value * t * (annual_birth_rate-annual_death_rate)) + (t * (annual_emigration_rate - annual_immigration_rate))
             one_year[target_year] = math.floor((population_of_target_year))
-            growth_percent = ((one_year[target_year] - value) / value) * 100
-            one_year["Growth Percent"] = round(growth_percent, 2)
+           
 
             
             res[key] = one_year
