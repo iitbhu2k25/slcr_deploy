@@ -1549,190 +1549,325 @@
       pollutionLoadContainer.appendChild(responsiveDiv);
     });
 
-    // Helper function to transpose an HTML table's data.
-function getTransposedTableData(tableElement) {
-  // Get rows as an array of arrays (each cell's text)
-  const rows = Array.from(tableElement.querySelectorAll("tr"));
-  const originalData = rows.map(row => {
-    return Array.from(row.querySelectorAll("th, td")).map(cell => cell.innerText.trim());
-  });
-  // Determine the maximum number of cells in any row.
-  const numCols = Math.max(...originalData.map(row => row.length));
-  // Build the transposed array.
-  let transposed = [];
-  for (let i = 0; i < numCols; i++) {
-    let newRow = [];
-    for (let j = 0; j < originalData.length; j++) {
-      newRow.push(originalData[j][i] || "");
+    // Helper function to transpose an HTML table (for vertical layout)
+    function getTransposedTableData(tableElement) {
+      const rows = Array.from(tableElement.querySelectorAll("tr"));
+      const originalData = rows.map(row =>
+        Array.from(row.querySelectorAll("th, td")).map(cell => cell.innerText.trim())
+      );
+      const numCols = Math.max(...originalData.map(row => row.length));
+      let transposed = [];
+      for (let i = 0; i < numCols; i++) {
+        let newRow = [];
+        for (let j = 0; j < originalData.length; j++) {
+          newRow.push(originalData[j][i] || "");
+        }
+        transposed.push(newRow);
+      }
+      const head = [transposed[0]];
+      const body = transposed.slice(1);
+      return { head, body };
     }
-    transposed.push(newRow);
-  }
-  // Assume the first row of the transposed data is the header.
-  const head = [transposed[0]];
-  const body = transposed.slice(1);
-  return { head, body };
-}
 
-document.getElementById('download-pdf-btn').addEventListener('click', async function () {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF('p', 'mm', 'a4');
-  let y = 10; // starting vertical offset
-  const maxWidth = 190;
-  const lineHeight = 7; // adjust spacing as needed
-
-  // Helper: Add text with wrapping.
-  function addParagraph(text) {
-    const lines = doc.splitTextToSize(text, maxWidth);
-    doc.text(lines, 10, y);
-    y += lines.length * lineHeight;
-  }
-
-  // Helper: Add section title.
-  function addSectionTitle(title) {
-    doc.setFontSize(14);
-    addParagraph(title);
-    y += lineHeight; // extra blank line
-    doc.setFontSize(12);
-  }
-
-  // 1. Header Section
-  doc.setFontSize(18);
-  addParagraph("Comprehensive Report on Sewage Generation");
-  doc.setFontSize(10);
-  const now = new Date();
-  addParagraph(`This report was created with the Decision Support System Web App, IIT BHU on ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}. Please save this page or print to PDF, as it will not be saved on the server.`);
-  y += 5;
-
-  // 2. Persistent Information Panel
-  addSectionTitle("Persistent Information:");
-  const persistentInfo = document.getElementById("persistent-info").innerText;
-  addParagraph(persistentInfo);
-  y += 5;
-
-  // 3. Population Forecasting Results (transposed to vertical)
-  const popForecastElem = document.getElementById("results-container");
-  if (popForecastElem && popForecastElem.innerText.trim() !== "") {
-    addSectionTitle("Population Forecasting Results:");
-    const popTable = popForecastElem.querySelector("table");
-    if (popTable) {
-      const transposedPop = getTransposedTableData(popTable);
-      doc.autoTable({
-        head: transposedPop.head,
-        body: transposedPop.body,
-        startY: y,
-        theme: 'grid'
+    // Helper function to load an image from URL as a Promise.
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        // Set crossOrigin attribute if your image is served with CORS headers.
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
       });
-      y = doc.lastAutoTable.finalY + 10;
-    } else {
-      addParagraph(popForecastElem.innerText);
     }
-    y += 5;
-  }
+    
 
-  // 4. Population Growth Results (transposed to vertical)
-  const growthTableElem = document.getElementById("results-container2");
-  if (growthTableElem && growthTableElem.innerText.trim() !== "") {
-    addSectionTitle("Population Growth Results:");
-    const growthTable = growthTableElem.querySelector("table");
-    if (growthTable) {
-      const transposedGrowth = getTransposedTableData(growthTable);
-      doc.autoTable({
-        head: transposedGrowth.head,
-        body: transposedGrowth.body,
-        startY: y,
-        theme: 'grid'
-      });
-      y = doc.lastAutoTable.finalY + 10;
-    } else {
-      addParagraph(growthTableElem.innerText);
+    document.getElementById('download-pdf-btn').addEventListener('click', async function () {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+
+      // Define margins and dimensions
+      const margin = 15;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const maxWidth = pageWidth - 2 * margin;
+      let y = margin;
+      const lineHeight = 7;
+      const logoWidth = 28;  // in mm
+      const logoHeight = 28; // in mm
+      const leftLogoWidth = 21;  // new width in mm
+      const leftLogoHeight = 21; // new height in mm
+
+      // Paste the checkPageBreak() function here:
+      function checkPageBreak(requiredHeight) {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        if (y + requiredHeight > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+      }
+
+      // Advanced helper: Add text with wrapping, alignment, and optional bold style.
+      function addParagraph(text, options = {}) {
+        const { align = 'left', bold = false, fontSize = 12 } = options;
+        doc.setFontSize(fontSize);
+        doc.setFont("helvetica", bold ? "bold" : "normal");
+        const lines = doc.splitTextToSize(text, maxWidth);
+        checkPageBreak(lines.length * lineHeight);
+        if (align === 'center') {
+          lines.forEach(line => {
+            doc.text(line, pageWidth / 2, y, { align: 'center' });
+            y += lineHeight;
+          });
+        } else {
+          doc.text(lines, margin, y);
+          y += lines.length * lineHeight;
+        }
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+      }
+
+      // Advanced helper: Add a section title with bold font, increased size, and a horizontal line.
+      function addSectionTitle(title) {
+        addParagraph(title, { bold: true, fontSize: 14 });
+        y += 2;
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += lineHeight;
+      }
+
+      // Advanced helper: Add a table from an HTML element using jsPDF-AutoTable.
+      function addTableFromElement(tableElement, transposed = false) {
+        let tableOptions = {
+          startY: y,
+          theme: 'grid',
+          headStyles: { fillColor: [22, 160, 133], textColor: 255 },
+          styles: { font: 'helvetica', fontSize: 10 },
+          margin: { left: margin, right: margin }
+        };
+        if (transposed) {
+          const transposedData = getTransposedTableData(tableElement);
+          tableOptions.head = transposedData.head;
+          tableOptions.body = transposedData.body;
+        } else {
+          tableOptions.html = tableElement;
+        }
+        doc.autoTable(tableOptions);
+        y = doc.lastAutoTable.finalY + 10;
+      }
+
+      // Advanced helper: Add a reference with clickable URL.
+      function addReference(refText, refUrl) {
+      // 1) Print the reference text normally (with wrapping)
+      const lines = doc.splitTextToSize(refText, maxWidth);
+      checkPageBreak(lines.length * lineHeight);
+      doc.text(lines, margin, y);
+      y += lines.length * lineHeight;
+
+      // 2) Print the link on one line (fully clickable)
+      doc.setTextColor(173, 216, 230); // Light blue color
+      checkPageBreak(lineHeight);
+      doc.textWithLink(refUrl, margin, y, { url: refUrl });
+      y += lineHeight;
+
+      doc.setTextColor(0, 0, 0);
     }
-    y += 5;
-  }
 
-  // 9. Add a Chart Image (if a canvas exists)
-  const chartCanvas = document.getElementById("summedChart");
-  if (chartCanvas) {
-    const imgData = chartCanvas.toDataURL("image/png");
-    if (y + 100 > 297) { // If insufficient space on current page, add a new page.
-      doc.addPage();
-      y = 10;
-    }
-    addSectionTitle("Population Projection Graph:");
-    // Adjust image dimensions as needed (here 190mm wide, 100mm tall)
-    doc.addImage(imgData, "PNG", 10, y, 190, 100);
-    y += 105;
-  }
 
-  // 5. Water Demand Calculation Results (assumed as a table if available)
-  const waterDemandElem = document.getElementById("water-demand-result");
-  if (waterDemandElem && waterDemandElem.innerText.trim() !== "") {
-    addSectionTitle("Water Demand Results:");
-    const waterDemandTable = waterDemandElem.querySelector("table");
-    if (waterDemandTable) {
-      // If you want water demand table in horizontal orientation, leave it as is.
-      doc.autoTable({ html: waterDemandTable, startY: y, theme: 'grid' });
-      y = doc.lastAutoTable.finalY + 10;
-    } else {
-      addParagraph(waterDemandElem.innerText);
-    }
-    y += 5;
-  }
 
-  // 6. Water Supply Calculation Results
-  const waterSupplyElem = document.getElementById("water-supply-result");
-  if (waterSupplyElem && waterSupplyElem.innerText.trim() !== "") {
-    addSectionTitle("Water Supply Results:");
-    const waterSupplyTable = waterSupplyElem.querySelector("table");
-    if (waterSupplyTable) {
-      doc.autoTable({ html: waterSupplyTable, startY: y, theme: 'grid' });
-      y = doc.lastAutoTable.finalY + 10;
-    } else {
-      addParagraph(waterSupplyElem.innerText);
-    }
-    y += 5;
-  }
+      // Load logos (using the same logo for left and right in this example)
+      try {
+        const rightLogo = await loadImage("/static/Images/logo_final.png");
+        const leftLogo = await loadImage("/static/Images/iit_logo2.png");
 
-  // 7. Sewage Calculation Results
-  const sewageElem = document.getElementById("sewage-result");
-  if (sewageElem && sewageElem.innerText.trim() !== "") {
-    addSectionTitle("Sewage Calculation Results:");
-    const sewageTable = sewageElem.querySelector("table");
-    if (sewageTable) {
-      doc.autoTable({ html: sewageTable, startY: y, theme: 'grid' });
-      y = doc.lastAutoTable.finalY + 10;
-    } else {
-      addParagraph(sewageElem.innerText);
-    }
-    y += 5;
-  }
+        // Add logos on the left and right of the header.
+        doc.addImage(leftLogo, "PNG", margin, y, leftLogoWidth, leftLogoHeight);
+        doc.addImage(rightLogo, "PNG", pageWidth - margin - logoWidth, y, logoWidth, logoHeight);
 
-  // 8. Pollution Load Table
-  const pollutionElem = document.getElementById("pollution-load-container");
-  if (pollutionElem && pollutionElem.innerText.trim() !== "") {
-    addSectionTitle("Pollution Load Table:");
-    const pollutionTable = pollutionElem.querySelector("table");
-    if (pollutionTable) {
-      doc.autoTable({ html: pollutionTable, startY: y, theme: 'grid' });
-      y = doc.lastAutoTable.finalY + 10;
-    } else {
-      addParagraph(pollutionElem.innerText);
-    }
-    y += 5;
-  }
+        // Add header text centered between the logos.
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("Comprehensive Report on Sewage Generation", pageWidth / 2, y + logoHeight / 2, { align: 'center' });
+        y += logoHeight + 5;
+      } catch (error) {
+        console.error("Error loading logo images:", error);
+        // In case of error, simply add the header text without logos.
+        doc.setFontSize(16);
+        addParagraph("Comprehensive Report on Sewage Generation", { align: 'center', bold: true, fontSize: 16 });
+        y += 10;
+      }
 
-  
+      // 2. Persistent Information Panel
+      addSectionTitle("Persistent Information:");
+      const persistentInfo = document.getElementById("persistent-info").innerText;
+      addParagraph(persistentInfo);
+      y += 5;
 
-  // 10. User Input Summary – include key input values
-  const stateValue = document.getElementById("state").value || "N/A";
-  const districtValue = document.getElementById("district").value || "N/A";
-  const subdistrictValue = document.getElementById("subdistrict").value || "N/A";
-  const targetYearValue = document.getElementById("target-year") ? document.getElementById("target-year").value : "";
-  addSectionTitle("User Input Summary:");
-  addParagraph(`State: ${stateValue} | District: ${districtValue} | Sub-District: ${subdistrictValue} | Target Year: ${targetYearValue}`);
+      // 3. Population Forecasting Results (transposed to vertical)
+      const popForecastElem = document.getElementById("results-container");
+      if (popForecastElem && popForecastElem.innerText.trim() !== "") {
+        addSectionTitle("6. Population Forecasting & Impact on Sewage Generation");
+        addParagraph("• Projected Population Growth: Table 1 shows the population from the initial year to the target year for the selected regions using the selected population method. It represents the total % population growth from the initial to the final year. The population growth trend is shown in Fig. 6.");
+        addSectionTitle("Table 1. Population for the Selected Regions");
+        const popTable = popForecastElem.querySelector("table");
+        if (popTable) {
+          addTableFromElement(popTable, true);
+        } else {
+          addParagraph(popForecastElem.innerText);
+        }
+        y += 5;
+      }
 
-  // Save the PDF file.
-  doc.save("Comprehensive_Report_on_Sewage_Generation.pdf");
-});
+      // 4. Population Growth Results (transposed to vertical)
+      const growthTableElem = document.getElementById("results-container2");
+      if (growthTableElem && growthTableElem.innerText.trim() !== "") {
+        addSectionTitle("Fig. 6. Population Prediction Using Different Methods");
+        const growthTable = growthTableElem.querySelector("table");
+        if (growthTable) {
+          addTableFromElement(growthTable, true);
+        } else {
+          addParagraph(growthTableElem.innerText);
+        }
+        y += 5;
+      }
+
+      // 9. Chart Image (if available)
+      const chartCanvas = document.getElementById("summedChart");
+      if (chartCanvas) {
+        const imgData = chartCanvas.toDataURL("image/png");
+        if (y + 110 > doc.internal.pageSize.getHeight()) {
+          doc.addPage();
+          y = margin;
+        }
+        addSectionTitle("Line Bar for Population by Different Methods");
+        doc.addImage(imgData, "PNG", margin, y, maxWidth, 100);
+        y += 110;
+      }
+
+      // 5. Water Demand Estimation – FULL TEXT
+      addSectionTitle("7. Water Demand Estimation:");
+      addParagraph("Water demand is estimated based on various contributing factors, categorized into the following components:");
+      addParagraph("Domestic Demand: Represents the water consumption for household and residential purposes, including drinking, cooking, bathing, and sanitation.");
+      addParagraph("Floating Demand: Accounts for the transient population such as commuters, tourists, and workers who do not reside in the region but contribute to water consumption. Floating population data is not as such available on the census website. So, in that regard, migrants based on their residence period of less than 1 year under the categories of education, business, work/employment, and others have been selected for the floating population category.");
+      addParagraph("Fire Fighting Demand: Refers to the estimated water requirement for fire protection services, ensuring adequate supply in case of emergencies.");
+      addParagraph("Total Demand: Represents the cumulative water requirement, incorporating domestic, floating, firefighting, and any other relevant demand factors.");
+      addParagraph("CPHEEO manual was used to find out the water demand under the selected category.");
+      addParagraph("For the selected region, the estimated water demand under (selected water demand category) is … MLD (Million Liters per Day). The calculation is based on population projections, per capita water consumption standards, and other influencing parameters, ensuring an accurate assessment of water demand.");
+      addSectionTitle("Water Demand Results:");
+      const waterDemandElem = document.getElementById("water-demand-result");
+      if (waterDemandElem && waterDemandElem.innerText.trim() !== "") {
+        const waterDemandTable = waterDemandElem.querySelector("table");
+        if (waterDemandTable) {
+          addTableFromElement(waterDemandTable, false);
+        } else {
+          addParagraph(waterDemandElem.innerText);
+        }
+      }
+      y += 5;
+
+      // 6. Water Supply & Its Role in Sewage Formation – FULL TEXT
+      addSectionTitle("8. Water Supply & Its Role in Sewage Formation:");
+      addParagraph("Water supply plays a critical role in determining sewage generation within a region. The total water supplied directly influences wastewater production, which must be effectively managed through sewage treatment systems.");
+      addParagraph("Water Supply Estimation: The water supply for the selected region is assessed based on multiple sources, including:");
+      addParagraph("Surface Water Supply (SWS): Water obtained from rivers, lakes, reservoirs, or canals.");
+      addParagraph("Groundwater Supply (GWS): Water sourced from wells, tube wells, and borewells.");
+      addParagraph("Alternate Water Supply (AWS): Includes desalination plants, rainwater harvesting, and wastewater recycling.");
+      addParagraph("The estimated total water supply is … MLD (Million Liters per Day).");
+      const waterSupplyElem = document.getElementById("water-supply-result");
+      if (waterSupplyElem && waterSupplyElem.innerText.trim() !== "") {
+        const waterSupplyTable = waterSupplyElem.querySelector("table");
+        if (waterSupplyTable) {
+          addTableFromElement(waterSupplyTable, false);
+        } else {
+          addParagraph(waterSupplyElem.innerText);
+        }
+      }
+      y += 5;
+
+      // 7. Sewage Generation Analysis – FULL TEXT
+      addSectionTitle("9. Sewage Generation Analysis:");
+      addParagraph("Sewage is computed based on the domestic water consumption pattern. CPHEEO manual highlights that 80% of the domestic water consumption is directly converted to the sewerage, and 5% of the generated sewerage is infiltrated. Non-Revenue Water (NRW) has a significant share in the sewerage generation, and it’s a critical factor for the dilution of raw sewerage. Raw sewerage characteristics was computed based on the CPHEEO manual Chapter 4.");
+      addParagraph("Report highlighted that sewage generated for the selected region is … MLD (In case of single selected year). NRW generated for the selected region is … LPCD. Raw sewerage characteristics is provided in Table 2. Furthermore, report highlighted that sewage generated for the selected region during period … to … is given in Table 3.");
+      addSectionTitle("Table 2. Projected Sewage Generation");
+      const sewageElem = document.getElementById("sewage-result");
+      if (sewageElem && sewageElem.innerText.trim() !== "") {
+        const sewageTable = sewageElem.querySelector("table");
+        if (sewageTable) {
+          addTableFromElement(sewageTable, false);
+        } else {
+          addParagraph(sewageElem.innerText);
+        }
+      }
+      y += 5;
+
+      // 8. Pollution Load Table
+      // Inside your download-pdf-btn click handler, when adding the pollution load table:
+      const pollutionElem = document.getElementById("pollution-load-container");
+      if (pollutionElem && pollutionElem.innerText.trim() !== "") {
+        const pollutionTable = pollutionElem.querySelector("table");
+        if (pollutionTable) {
+          // Clone the table to avoid modifying the on-screen version
+          const clonedTable = pollutionTable.cloneNode(true);
+          // For every input element in the cloned table, replace it with its value
+          clonedTable.querySelectorAll("input").forEach(input => {
+            const parentCell = input.parentNode;
+            parentCell.textContent = input.value;
+          });
+          // Now add the table from the modified clone to the PDF
+          addTableFromElement(clonedTable, false);
+        } else {
+          addParagraph(pollutionElem.innerText);
+        }
+      }
+      y += 8;
+
+      
+
+      // 10. User Input Summary – include key input values
+      addSectionTitle("User Input Summary:");
+      const stateValue = document.getElementById("state").value || "N/A";
+      const districtValue = document.getElementById("district").value || "N/A";
+      const subdistrictValue = document.getElementById("subdistrict").value || "N/A";
+      const targetYearValue = document.getElementById("target-year") ? document.getElementById("target-year").value : "";
+      addParagraph(`State: ${stateValue} | District: ${districtValue} | Sub-District: ${subdistrictValue} | Target Year: ${targetYearValue}`, { bold: true });
+      y += 5;
+
+      // 11. References Section (with clickable links)
+      addSectionTitle("References:");
+      addReference(
+        "Fick, S.E., and R.J. Hijmans. 2017. “WorldClim 2: New 1‐km Spatial Resolution Climate Surfaces for Global Land Areas.” International Journal of Climatology 37 (12): 4302–15.",
+        "https://doi.org/10.1002/joc.5086"
+      );
+
+      addReference(
+        "Harris, I., Osborn, T.J., Jones, P. et al. Version 4 of the CRU TS monthly high-resolution gridded multivariate climate dataset. Scientific Data 7, 109 (2020).",
+        "https://doi.org/10.1038/s41597-020-0453-3"
+      );
+
+      addReference(
+        "Martens, B., Miralles, D.G., Lievens, H., van der Schalie, R., de Jeu, R.A.M., Fernández-Prieto, D., Beck, H.E., Dorigo, W.A., and Verhoest, N.E.C. 2017. GLEAM v3: satellite-based land evaporation and root-zone soil moisture, Geoscientific Model Development, 10, 1903–1925.",
+        "https://doi.org/10.5194/gmd-10-1903-2017"
+      );
+
+      addReference(
+        "Miralles, D.G., Holmes, T.R.H., de Jeu, R.A.M., Gash, J.H., Meesters, A.G.C.A., Dolman, A.J. 2011. Global land-surface evaporation estimated from satellite-based observations, Hydrology and Earth System Sciences, 15, 453–469.",
+        "https://doi.org/10.5194/hess-15-453-2011"
+      );
+
+      addReference(
+        "Save, H., S. Bettadpur, and B.D. Tapley (2016), High resolution CSR GRACE RL05 mascons, Journal of Geophysical Research Solid Earth, 121.",
+        "https://doi.org/10.1002/2016JB013007"
+      );
+
+      addReference(
+        "Save, H., 2020, CSR GRACE and GRACE-FO RL06 Mascon Solutions v02.",
+        "https://doi.org/10.1002/essoar.10503394.1"
+      );
+
+
+
+      // Save the PDF file.
+      doc.save("Comprehensive_Report_on_Sewage_Generation.pdf");
+    });
 
 
 
