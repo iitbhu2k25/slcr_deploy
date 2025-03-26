@@ -508,27 +508,34 @@
         </div>
       </div>
     </div>
-    <!-- Firefighting Fields (Hidden by default) -->
+    <!-- Firefighting Water Demand Calculation (Hidden by default) -->
     <div id="firefighting_container" class="box hidden">
-      <h6><b>Firefighting Fields</b></h6>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="intermediate_stage" class="form-label">Intermediate stage (Enter 15 for intermediate &amp; 30 for ultimate stage):</label>
-          <input type="number" id="intermediate_stage" class="form-control" placeholder="Enter number">
+      <h6><b>Firefighting Water Demand Calculation</b></h6>
+      <div class="form-group mb-3">
+        <label class="form-label">Select Firefighting Methods:</label>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="kuchling" id="firefighting_method_kuchling">
+          <label class="form-check-label" for="firefighting_method_kuchling">Kuchling's Method</label>
         </div>
-        <div class="col-md-6">
-          <label for="population_load_intermediate" class="form-label">Population at Intermediate stage:</label>
-          <input type="number" id="population_load_intermediate" class="form-control" placeholder="Enter number">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="freeman" id="firefighting_method_freeman">
+          <label class="form-check-label" for="firefighting_method_freeman">Freeman Method</label>
         </div>
-        <div class="col-md-6">
-          <label for="operational_zone" class="form-label">Name of Operational Zone:</label>
-          <input type="text" id="operational_zone" class="form-control" placeholder="Enter name">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="buston" id="firefighting_method_buston">
+          <label class="form-check-label" for="firefighting_method_buston">Buston Method</label>
         </div>
-        <div class="col-md-6">
-          <label for="population_load_operational" class="form-label">Population at Operational Zone:</label>
-          <input type="number" id="population_load_operational" class="form-control" placeholder="Enter number">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="american_insurance" id="firefighting_method_american_insurance">
+          <label class="form-check-label" for="firefighting_method_american_insurance">American Insurance Association Method</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="ministry_urban" id="firefighting_method_ministry_urban">
+          <label class="form-check-label" for="firefighting_method_ministry_urban">Ministry of Urban Development Method</label>
         </div>
       </div>
+      <button id="calculate-firefighting-demand" type="button" class="btn btn-dark">Calculate Firefighting Water Demand</button>
+      <div id="firefighting_result" class="mt-3"></div>
     </div>
     <button id="calculate-water-demand" type="button" class="btn btn-dark">Calculate Water Demand</button>
     <div id="water-demand-result" class="mt-3" style="font-weight: bold;"></div>
@@ -879,7 +886,8 @@
           }
         }
       });
-}
+    }
+
 
 
     // Toggle extra water demand fields when corresponding checkbox is changed
@@ -906,6 +914,117 @@
       } else {
         container.classList.add('hidden');
       }
+    });
+
+    // Helper function to calculate firefighting demand.
+    // Replace these multipliers/formulas with your actual formulas.
+    function calculateFirefightingDemand(method, popVal) {
+      let demand = 0;
+      switch(method) {
+        case "kuchling":
+          demand = 4.582 * Math.sqrt(popVal / 1000);
+          break;
+        case "freeman":
+          demand = 1.635 * ((popVal / 5000) + 10);
+          break;
+        case "buston":
+          demand = 8.155 * Math.sqrt(popVal / 1000);
+          break;
+        case "american_insurance":
+          demand = 6.677 * Math.sqrt(popVal / 1000) * (1 - 0.01 * Math.sqrt(popVal / 1000));
+          break;
+        case "ministry_urban":
+          demand = Math.sqrt(popVal) / 10;
+          break;
+        default:
+          demand = 0;
+      }
+      return demand;
+    }
+
+    
+    // Firefighting water demand calculation handler using checkboxes.
+    document.getElementById('calculate-firefighting-demand').addEventListener('click', function() {
+      const ffResultContainer = document.getElementById('firefighting_result');
+      
+      // Ensure that computedPopulation is available.
+      if (typeof computedPopulation === 'undefined') {
+        ffResultContainer.innerHTML = "<p>Error: Population not computed. Please calculate population first.</p>";
+        return;
+      }
+      
+      // Get selected methods from checkboxes.
+      const selectedMethods = [];
+      const possibleMethods = ["kuchling", "freeman", "buston", "american_insurance", "ministry_urban"];
+      possibleMethods.forEach(method => {
+        const checkbox = document.getElementById('firefighting_method_' + method);
+        if (checkbox && checkbox.checked) {
+          selectedMethods.push(method);
+        }
+      });
+      
+      if (selectedMethods.length === 0) {
+        ffResultContainer.innerHTML = "<p>Error: Please select at least one firefighting method.</p>";
+        return;
+      }
+      
+      // Create a global object to store firefighting results per year.
+      window.firefightingResults = {};
+      
+      // Build table header: Year, Population, then a column per selected method.
+      let ffTableHTML = `
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Population</th>`;
+      selectedMethods.forEach(method => {
+        let label;
+        switch(method) {
+          case "kuchling": label = "Kuchling's"; break;
+          case "freeman": label = "Freeman"; break;
+          case "buston": label = "Buston"; break;
+          case "american_insurance": label = "American Ins. Assoc."; break;
+          case "ministry_urban": label = "Ministry Urban Dev."; break;
+          default: label = method;
+        }
+        ffTableHTML += `<th>${label}</th>`;
+      });
+      ffTableHTML += `</tr></thead><tbody>`;
+      
+      // Loop through each projection year in computedPopulation.
+      for (let yr in computedPopulation) {
+        let popVal = Number(computedPopulation[yr]);
+        // Calculate firefighting demand for each selected method for this year.
+        window.firefightingResults[yr] = {};
+        selectedMethods.forEach(method => {
+          window.firefightingResults[yr][method] = calculateFirefightingDemand(method, popVal);
+        });
+        
+        ffTableHTML += `<tr>
+          <td>${yr}</td>
+          <td>${popVal.toLocaleString()}</td>`;
+        selectedMethods.forEach(method => {
+          ffTableHTML += `<td>${window.firefightingResults[yr][method].toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
+        });
+        ffTableHTML += `</tr>`;
+      }
+      
+      ffTableHTML += `</tbody></table></div>`;
+      
+      // Build a single radio button group for selecting one method for all years.
+      let radioGroupHTML = `<div class="mt-3"><p>Select a Firefighting Method to apply for all years:</p>`;
+      selectedMethods.forEach((method, index) => {
+        const checkedAttr = (index === 0) ? "checked" : "";
+        radioGroupHTML += `<div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="firefighting_method_choice" value="${method}" ${checkedAttr}>
+            <label class="form-check-label">${method}</label>
+          </div>`;
+      });
+      radioGroupHTML += `</div>`;
+      
+      ffResultContainer.innerHTML = ffTableHTML + radioGroupHTML;
     });
   
     // Water Demand Calculation Handler – Build one combined table with a column for each selected component.
@@ -1019,11 +1138,13 @@
           ) / 1000000;
         }
   
-        // For Firefighting: compute a base 2011 value from input fields (dummy calculation; adjust as needed)
-        let firefightingBase = 0;
+        // Get the chosen firefighting method from the radio button group.
+        let chosenFirefightingMethod = null;
         if (firefightingChecked) {
-          const population_load_operational = parseFloat(document.getElementById('population_load_operational')?.value) || 0;
-          firefightingBase = Math.sqrt(population_load_operational / 1000000);
+          const selectedRadio = document.querySelector('input[name="firefighting_method_choice"]:checked');
+          if (selectedRadio) {
+            chosenFirefightingMethod = selectedRadio.value;
+          }
         }
   
         // Build table header
@@ -1075,9 +1196,12 @@
           }
           // Firefighting Water Demand: scale base value by (popValue / basePopulation)
           if (firefightingChecked) {
-            let firefightingDemand = firefightingBase * (popValue / basePopulation);
-            totalDemand += firefightingDemand;
-            outputHTML += `<td>${firefightingDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
+            let ffDemand = 0;
+            if (window.firefightingResults && window.firefightingResults[yr] && chosenFirefightingMethod) {
+              ffDemand = window.firefightingResults[yr][chosenFirefightingMethod];
+            }
+            totalDemand += ffDemand;
+            outputHTML += `<td>${ffDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
           }
           outputHTML += `<td>${totalDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td></tr>`;
         }
@@ -1697,7 +1821,7 @@
       }
 
       // 2. Persistent Information Panel
-      addSectionTitle("Persistent Information:");
+      addSectionTitle("Geographic Information:");
       const persistentInfo = document.getElementById("persistent-info").innerText;
       addParagraph(persistentInfo);
       y += 5;
@@ -1801,6 +1925,7 @@
 
       // 8. Pollution Load Table
       // Inside your download-pdf-btn click handler, when adding the pollution load table:
+      addSectionTitle("Raw Sewage Charateristics:");
       const pollutionElem = document.getElementById("pollution-load-container");
       if (pollutionElem && pollutionElem.innerText.trim() !== "") {
         const pollutionTable = pollutionElem.querySelector("table");
