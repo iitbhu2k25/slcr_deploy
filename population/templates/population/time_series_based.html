@@ -3,6 +3,99 @@
 
 <!-- Add style to hide elements with the "hidden" class -->
 <style>
+  /* populationcssmodify start*/
+  .dropdown-menu {
+            max-height: 250px;
+            overflow-y: auto;
+            width: 100%;
+        }
+        .dropdown-header {
+            font-weight: bold;
+            padding: 8px 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+    /* Ensure the village container has horizontal scrolling */
+    #town-village-container {
+        width: 100%;
+        overflow-x: auto;  /* Enable horizontal scrolling */
+        overflow-y: hidden; /* Prevent vertical scrolling inside */
+        white-space: nowrap;
+        max-width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+
+    /* Ensure the scroll container always shows scrollbar */
+    .scrollable-container {
+        display: flex;
+        flex-wrap: nowrap; /* Prevent wrapping */
+        width: max-content; /* Expand based on content */
+        min-width: 100%; /* Ensure it fits container */
+        overflow-x: scroll;
+        overflow-y: hidden;
+        padding-bottom: 10px;
+    }
+
+    .village-header {
+    white-space: nowrap;  /* Prevents text from wrapping */
+    overflow: hidden;      /* Hides overflowing text */
+    text-overflow: ellipsis; /* Adds "..." for overflowed text */
+    max-width: 100%;       /* Ensures it stays inside the container */
+    display: block;        /* Ensures proper layout */
+}
+
+
+    /* Village column settings */
+    .village-column {
+        flex: 0 0 auto; /* Prevent shrinking */
+        width: 250px; /* Fixed column width */
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        margin-right: 10px;
+        background-color: #f8f9fa;
+    }
+
+    /* Always show horizontal scrollbar */
+    #town-village-container::-webkit-scrollbar {
+        height: 8px; /* Adjust scrollbar thickness */
+    }
+
+    #town-village-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    #town-village-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    #selected-villages {
+    display: block;          /* Ensures each name is on a new line */
+    max-height: 200px;       /* Limit height to enable scrolling */
+    overflow-y: auto;        /* Enable vertical scrolling */
+    overflow-x: hidden;      /* Prevent horizontal overflow */
+    padding: 8px;
+    border: 1px solid #ccc;  /* Optional: Add border for visibility */
+    background-color: #f8f9fa; /* Light gray background */
+    word-wrap: break-word;   /* Ensures long names don’t overflow */
+}
+
+.village-item {
+    display: block;          /* Each item appears on a new line */
+    white-space: nowrap;     /* Prevents text wrapping */
+    overflow: hidden;        /* Hide overflowing text */
+    text-overflow: ellipsis; /* Show "..." if the text is too long */
+    padding: 5px;
+    border-bottom: 1px solid #ddd; /* Optional: Add a separator */
+}
+  /* end */
+
+
+
+
+
+
   .hidden { display: none; }
   .stage { margin-bottom: 30px; padding: 15px; border: 1px solid #ccc; }
   .bordered {
@@ -114,24 +207,35 @@
       {% csrf_token %}
       <!-- State, District, Sub-District, and Town/Village Selection -->
       <div class="row">
-        <div class="form-group col-12 col-md-3 mb-3">
+         <!-- State Selection -->
+         <div class="col-md-4 mb-3">
           <label for="state">State:</label>
-          <select id="state" name="state">
-            <option value="">Select a State</option>
+          <select id="state" name="state" class="form-select">
+              <option value="">Select a State</option>
           </select>
-        </div>
-        <div class="form-group col-12 col-md-3 mb-3">
-          <label for="district">District:</label>
-          <select id="district" name="district">
-            <option value="">Select a District</option>
-          </select>
-        </div>
-        <div class="form-group col-12 col-md-3 mb-3">
-          <label for="subdistrict">Sub-District:</label>
-          <select id="subdistrict" name="subdistrict">
-            <option value="">Select a Sub-District</option>
-          </select>
-        </div>
+      </div>
+
+      <!-- Multi-Select District -->
+      <div class="col-md-4 mb-3">
+          <label>District:</label>
+          <div class="dropdown">
+              <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown" id="district-btn">
+                  Select Districts
+              </button>
+              <ul class="dropdown-menu p-2" id="district-list"></ul>
+          </div>
+      </div>
+
+      <!-- Multi-Select Sub-District -->
+      <div class="col-md-4 mb-3">
+          <label>Sub-District:</label>
+          <div class="dropdown">
+              <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown" id="subdistrict-btn">
+                  Select Sub-Districts
+              </button>
+              <ul class="dropdown-menu p-2" id="subdistrict-list"></ul>
+          </div>
+      </div>
         <div class="form-group col-10 col-md-5 mb-3">
           <label for="town-village">Town/Village:</label>
           <div id="town-village-container" class="border p-2" style="max-height: 200px; overflow-y: auto;">
@@ -691,43 +795,66 @@
 <script>
 
   
-  // Update persistent information panel
   function updatePersistentInfo() {
-    const stateDropdown = document.getElementById('state');
-    const districtDropdown = document.getElementById('district');
-    const subdistrictDropdown = document.getElementById('subdistrict');
-    const villageCheckboxes = document.querySelectorAll('#town-village-container input[type="checkbox"]:checked');
-    
-    const stateText = stateDropdown.options[stateDropdown.selectedIndex]?.text || "State";
-    const districtText = districtDropdown.options[districtDropdown.selectedIndex]?.text || "District";
-    const subdistrictText = subdistrictDropdown.options[subdistrictDropdown.selectedIndex]?.text || "Sub-District";
-    
-    const villageNames = Array.from(villageCheckboxes)
-      .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
-      .filter(name => name !== "")
-      .join(', ') || "Village";
-    
-    let yearText = "Year";
-    const yearOption = document.querySelector('input[name="year_selection"]:checked')?.value;
-    if (yearOption === "single") {
-      yearText = document.getElementById('target-year').value || "Year";
-    } else if (yearOption === "range") {
-      const start = document.getElementById('target-year-range-start').value;
-      const end = document.getElementById('target-year-range-end').value;
-      yearText = start && end ? `${start} to ${end}` : "Year";
-    }
-    
-    document.getElementById('selected-state').textContent = stateText;
-    document.getElementById('selected-district').textContent = districtText;
-    document.getElementById('selected-subdistrict').textContent = subdistrictText;
-    document.getElementById('selected-village').textContent = villageNames;
-    document.getElementById('selected-year').textContent = yearText;
+      // State is still a regular dropdown
+      const stateDropdown = document.getElementById('state');
+      const stateText = stateDropdown.options[stateDropdown.selectedIndex]?.text || "State";
+      
+      // For Districts - get all checked checkboxes in the district dropdown
+      const districtCheckboxes = document.querySelectorAll('#district-list input[type="checkbox"]:checked');
+      const districtNames = Array.from(districtCheckboxes)
+        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+        .filter(name => name !== "");
+      const districtText = districtNames.length > 0 ? districtNames.join(', ') : "District";
+      
+      // For Sub-Districts - get all checked checkboxes in the subdistrict dropdown
+      const subdistrictCheckboxes = document.querySelectorAll('#subdistrict-list input[type="checkbox"]:checked');
+      const subdistrictNames = Array.from(subdistrictCheckboxes)
+        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+        .filter(name => name !== "");
+      const subdistrictText = subdistrictNames.length > 0 ? subdistrictNames.join(', ') : "Sub-District";
+      
+      // Village handling remains the same
+      const villageCheckboxes = document.querySelectorAll('#town-village-container input[type="checkbox"]:checked');
+      const villageNames = Array.from(villageCheckboxes)
+        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+        .filter(name => name !== "")
+        .join(', ') || "Village";
+      
+      // Year handling remains the same
+      let yearText = "Year";
+      const yearOption = document.querySelector('input[name="year_selection"]:checked')?.value;
+      if (yearOption === "single") {
+        yearText = document.getElementById('target-year').value || "Year";
+      } else if (yearOption === "range") {
+        const start = document.getElementById('target-year-range-start').value;
+        const end = document.getElementById('target-year-range-end').value;
+        yearText = start && end ? `${start} to ${end}` : "Year";
+      }
+      
+      // Update the display elements
+      document.getElementById('selected-state').textContent = stateText;
+      document.getElementById('selected-district').textContent = districtText;
+      document.getElementById('selected-subdistrict').textContent = subdistrictText;
+      document.getElementById('selected-village').textContent = villageNames;
+      document.getElementById('selected-year').textContent = yearText;
+      
+      // Optional: Update the dropdown button text to reflect selections
+      if (districtNames.length > 0) {
+        document.getElementById('district-btn').textContent = 
+          districtNames.length > 1 ? `${districtNames.length} Districts Selected` : districtNames[0];
+      }
+      
+      if (subdistrictNames.length > 0) {
+        document.getElementById('subdistrict-btn').textContent = 
+          subdistrictNames.length > 1 ? `${subdistrictNames.length} Sub-Districts Selected` : subdistrictNames[0];
+      }
   }
   
   document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('state').addEventListener('change', updatePersistentInfo);
-    document.getElementById('district').addEventListener('change', updatePersistentInfo);
-    document.getElementById('subdistrict').addEventListener('change', updatePersistentInfo);
+    document.getElementById('district-btn').addEventListener('change', updatePersistentInfo);
+    document.getElementById('subdistrict-btn').addEventListener('change', updatePersistentInfo);
     document.getElementById('target-year').addEventListener('input', updatePersistentInfo);
     document.getElementById('target-year-range-start').addEventListener('input', updatePersistentInfo);
     document.getElementById('target-year-range-end').addEventListener('input', updatePersistentInfo);
@@ -739,6 +866,8 @@
       
       // Save the selected projection forecast
       const selectedRadio = document.querySelector('input[name="projection-method"]:checked');
+      console.log("selectedradionbtun", selectedRadio);
+      
       if (!selectedRadio) {
         alert('Please select a projection method before proceeding.');
         return;
@@ -753,6 +882,7 @@
         console.log("Available forecast keys:", window.summedList ? Object.keys(window.summedList) : "No summedList defined");
         return;
       }
+      console.log("window.summedList[selectedMethod]", window.summedList[selectedMethod]);
       
       // Save the forecast data to the global computedPopulation variable
       window.computedPopulation = window.summedList[selectedMethod];
@@ -922,19 +1052,19 @@
       let demand = 0;
       switch(method) {
         case "kuchling":
-          demand = 4.582 * Math.sqrt(popVal / 1000);
+          demand = (4.582/100) * Math.sqrt(popVal / 1000);
           break;
         case "freeman":
-          demand = 1.635 * ((popVal / 5000) + 10);
+          demand = (1.635/100) * ((popVal / 5000) + 10);
           break;
         case "buston":
-          demand = 8.155 * Math.sqrt(popVal / 1000);
+          demand = (8.155/100) * Math.sqrt(popVal / 1000);
           break;
         case "american_insurance":
-          demand = 6.677 * Math.sqrt(popVal / 1000) * (1 - 0.01 * Math.sqrt(popVal / 1000));
+          demand = (6.677/100) * Math.sqrt(popVal / 1000) * (1 - 0.01 * Math.sqrt(popVal / 1000));
           break;
         case "ministry_urban":
-          demand = Math.sqrt(popVal) / 10;
+          demand = Math.sqrt(popVal) / 1000;
           break;
         default:
           demand = 0;
@@ -1424,26 +1554,7 @@
       }, 700);
     });
   
-    function togglePredictionOptions() {
-      const timeSeriesOptions = document.getElementById('time-series-options');
-      const demographicOptions = document.getElementById('demographic-options');
-      if (document.getElementById('time-series').checked) {
-        timeSeriesOptions.style.display = 'block';
-        demographicOptions.style.display = 'none';
-      } else if (document.getElementById('demographic-based').checked) {
-        timeSeriesOptions.style.display = 'none';
-        demographicOptions.style.display = 'block';
-      } else {
-        timeSeriesOptions.style.display = 'none';
-        demographicOptions.style.display = 'none';
-      }
-    }
-  
-    togglePredictionOptions();
-  
-    document.querySelectorAll('input[name="prediction_method"]').forEach(function (radio) {
-      radio.addEventListener("change", togglePredictionOptions);
-    });
+   
 
     // =========================
     // Sewage Stage UI Toggling
@@ -1949,11 +2060,38 @@
 
       // 10. User Input Summary – include key input values
       addSectionTitle("User Input Summary:");
+
+      // Get state value (still a regular dropdown)
       const stateValue = document.getElementById("state").value || "N/A";
-      const districtValue = document.getElementById("district").value || "N/A";
-      const subdistrictValue = document.getElementById("subdistrict").value || "N/A";
-      const targetYearValue = document.getElementById("target-year") ? document.getElementById("target-year").value : "";
-      addParagraph(`State: ${stateValue} | District: ${districtValue} | Sub-District: ${subdistrictValue} | Target Year: ${targetYearValue}`, { bold: true });
+      const stateText = document.getElementById("state").options[document.getElementById("state").selectedIndex]?.text || "N/A";
+
+      // Get district values (multi-select)
+      const districtCheckboxes = document.querySelectorAll('#district-list input[type="checkbox"]:checked');
+      const districtNames = Array.from(districtCheckboxes)
+        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+        .filter(name => name !== "");
+      const districtText = districtNames.length > 0 ? districtNames.join(', ') : "N/A";
+
+      // Get subdistrict values (multi-select)
+      const subdistrictCheckboxes = document.querySelectorAll('#subdistrict-list input[type="checkbox"]:checked');
+      const subdistrictNames = Array.from(subdistrictCheckboxes)
+        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+        .filter(name => name !== "");
+      const subdistrictText = subdistrictNames.length > 0 ? subdistrictNames.join(', ') : "N/A";
+
+      // Get target year value
+      let targetYearText = "N/A";
+      const yearOption = document.querySelector('input[name="year_selection"]:checked')?.value;
+      if (yearOption === "single") {
+        targetYearText = document.getElementById('target-year').value || "N/A";
+      } else if (yearOption === "range") {
+        const start = document.getElementById('target-year-range-start').value;
+        const end = document.getElementById('target-year-range-end').value;
+        targetYearText = start && end ? `${start} to ${end}` : "N/A";
+      }
+
+      // Add the summary paragraph
+      addParagraph(`State: ${stateText} | District: ${districtText} | Sub-District: ${subdistrictText} | Target Year: ${targetYearText}`, { bold: true });
       y += 5;
 
       // 11. References Section (with clickable links)
@@ -1998,6 +2136,9 @@
 
 
   
+  });
+
+  
     // Toggle Prediction Options for Population Prediction Methods
     // Toggle Prediction Options for Population Prediction Methods
     function togglePredictionOptions() {
@@ -2015,7 +2156,6 @@
     document.querySelectorAll('input[name="prediction_method"]').forEach(function (radio) {
       radio.addEventListener("change", togglePredictionOptions);
     });
-  });
 </script>
 
 

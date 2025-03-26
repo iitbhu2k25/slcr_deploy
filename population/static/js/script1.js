@@ -1,5 +1,4 @@
-let code_to_villagename = {};
-let villagePopulations = {};
+
 let chartInstances = {};
 
 // New data structure to store selected villages across district changes
@@ -8,311 +7,361 @@ let persistentSelections = {
   totalPopulation: 0
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+
+
+let count=0;
+document.addEventListener("DOMContentLoaded", function () {
+  const stateDropdown = document.getElementById("state");
+  const districtList = document.getElementById("district-list");
+  const subdistrictList = document.getElementById("subdistrict-list");
+  const townVillageContainer = document.getElementById("town-village-container");
+  const selectedVillagesContainer = document.getElementById("selected-villages");
+  const totalPopulationContainer = document.getElementById("total-population");
+
+  let selectedDistricts = new Set();
+  let selectedSubdistricts = new Set();
+  let selectedVillages = new Set();
+  let districtNames = {}; // Store district names for subdistrict grouping
+  let subdistrictNames = {}; // Store subdistrict names with code for each district 
+  let code_to_villagename = {};
+  let code_to_villagepopulation_2011= {} 
+  let villageToDistrict = {}; // {villageCode: districtCode}
+  let villageToSubdistrict = {}; // {villageCode: subdistrictCode}
+
+
   // Fetch states on page load
-  fetch('/population/get-states/')
-    .then(response => response.json())
-    .then(states => populateDropdown('state', states, 'state_code', 'region_name'))
-    .catch(error => console.error('Error fetching states:', error));
+  fetch("/population/get-states/")
+      .then(response => response.json())
+      .then(states => populateDropdown(stateDropdown, states, "state_code", "region_name"))
+      .catch(error => console.error("Error fetching states:", error));
 
-  // Event listener for state selection
-  document.getElementById('state').addEventListener('change', function () {
-    const stateCode = this.value;
-    if (stateCode) {
-      fetch(`/population/get-districts/${stateCode}/`)
-        .then(response => response.json())
-        .then(districts => populateDropdown('district', districts, 'district_code', 'region_name'))
-        .catch(error => console.error('Error fetching districts:', error));
-    }
-    resetDropdown('district');
-    resetDropdown('subdistrict');
-    clearCurrentVillageOptions(); // Only clear options, not selections
-  });
-
-  // Event listener for district selection
-  document.getElementById('district').addEventListener('change', function () {
-    const stateCode = document.getElementById('state').value;
-    const districtCode = this.value;
-    if (districtCode) {
-      fetch(`/population/get-subdistricts/${stateCode}/${districtCode}/`)
-        .then(response => response.json())
-        .then(subdistricts => populateDropdown('subdistrict', subdistricts, 'subdistrict_code', 'region_name'))
-        .catch(error => console.error('Error fetching subdistricts:', error));
-    }
-    resetDropdown('subdistrict');
-    clearCurrentVillageOptions(); // Only clear options, not selections
-  });
-
-  // Event listener for subdistrict selection
-  document.getElementById('subdistrict').addEventListener('change', function () {
-    const stateCode = document.getElementById('state').value;
-    const districtCode = document.getElementById('district').value;
-    const subdistrictCode = this.value;
-    
-    // Clear current village options, but not selections
-    clearCurrentVillageOptions();
-    
-    if (subdistrictCode) {
-      fetch(`/population/get-villages/${stateCode}/${districtCode}/${subdistrictCode}/`)
-        .then(response => response.json())
-        .then(villages => {
-          // Sort villages alphabetically by region_name
-          // villages.sort((a, b) => (a.region_name || '').localeCompare(b.region_name || ''));
-          // Filter out any "All" entry before sorting
-          // Calculate the sum of the population for entries where region_name starts with "Subdistrict"
-          const subdistrictPopulationSum = villages
-          .filter(item => item.region_name.startsWith("Subdistrict"))
-          .reduce((sum, item) => sum + (item.population_2011 || 0), 0);
-
-          const filteredVillages = villages.filter(item => item.village_code !== 0);
-          filteredVillages.sort((a, b) => (a.region_name || '').localeCompare(b.region_name || ''));
-
-          // Find the "All" entry and update its population if it exists and population_2011 is null
-          const allEntry = villages.find(item => item.village_code === 0 && item.region_name.trim() === "All");
-          if (allEntry) {
-          if (allEntry.population_2011 === null) {
-              allEntry.population_2011 = subdistrictPopulationSum;
-          }
-          filteredVillages.unshift(allEntry);
-          }
-
-// console.log("Filtered Villages:", filteredVillages);
-
-
-
-
-         
-         
-          // Pass the sorted list to the function
-          populateTownVillage(filteredVillages, 'subdistrict_code', 'village_code', 'region_name', 'population_2011');
-        })
-        .catch(error => console.error('Error fetching villages:', error));
-    }
-    
-  });
-});
-
-// Populate dropdown options
-function populateDropdown(dropdownId, data, valueKey, textKey) {
-  const dropdown = document.getElementById(dropdownId);
-  dropdown.innerHTML = '<option value="">Select an Option</option>';
-  data.forEach(item => {
-    const option = document.createElement('option');
-    option.value = item[valueKey];
-    option.textContent = item[textKey];
-    dropdown.appendChild(option);
-  });
-}
-
-// Reset dropdown options
-function resetDropdown(dropdownId) {
-  const dropdown = document.getElementById(dropdownId);
-  dropdown.innerHTML = '<option value="">Select an Option</option>';
-}
-
-// Populate town/village container
-function populateTownVillage(data, sdcode, vcode, rcode, pcode) {
-  console.log(data);
-  console.log("Hiii");
-  
-  const container = document.getElementById('town-village-container');
-  container.innerHTML = ''; // Clear previous checkboxes
-  let totalPop = 0;
-
- 
-  
-  // Get current state, district and subdistrict codes and names
-  const state = document.getElementById("state");
-  const stateCode = state.value;
-  const selectedStateName = state.options[state.selectedIndex]?.text || "Unknown State";
-  
-  const district = document.getElementById("district");
-  const districtCode = district.value;
-  const selectedDistrictName = district.options[district.selectedIndex]?.text || "Unknown District";
-  
-  const subdistrict = document.getElementById("subdistrict");
-  const subdistrictCode = subdistrict.value;
-  const selectedSubdistrictName = subdistrict.options[subdistrict.selectedIndex]?.text || "Unknown Subdistrict";
-  
-  data.forEach(item => {
-    const villageId = item[vcode];
-    
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.value = villageId;
-    checkbox.id = `village-${villageId}`;
-    checkbox.className = 'village-checkbox';
-    
-    // Check if this village was previously selected
-    if (persistentSelections.villages[villageId]) {
-      checkbox.checked = true;
-    }
-    
-    villagePopulations[villageId] = item[pcode];
-    code_to_villagename[villageId] = item[rcode];
-
-      if (item[sdcode] > 0 && item[vcode] === 0) {
-        totalPop += item[pcode];
+  // Fetch districts when a state is selected
+  stateDropdown.addEventListener("change", function () {
+      const stateCode = this.value;
+      selectedDistricts.clear();
+      districtList.innerHTML = "";
+      if(subdistrictList.innerHTML !== ""){
+        subdistrictList.innerHTML = ""; // Reset subdistrict list
       }
-
-    const label = document.createElement('label');
-    label.htmlFor = checkbox.id;
-    label.textContent = item[rcode];
-
-    const div = document.createElement('div');
-    div.appendChild(checkbox);
-    div.appendChild(label);
-
-    container.appendChild(div);
-
-    // Add event listener to update selected villages and handle "All" selection
-    checkbox.addEventListener('change', function () {
-      const villageId = this.value;
-      console.log("villageId ", villageId);
-      
-      const villageName = label.textContent;
-      console.log("villageName ,",villageName);
-      
-      const population = villagePopulations[villageId] || 0;
-      console.log("popou ",population);
-      
-      
-      if (this.checked) {
-        // Add to persistent selections with state, district, and subdistrict codes
-        console.log("vid",villageId);
-        console.log("villageName",villageName);
-        console.log("districtName",selectedDistrictName);
-        console.log("population",population);
-        console.log("villagePopulations",population);
-        
-        persistentSelections.villages[villageId] = {
-          name: villageName,
-          population: population,
-          districtName: selectedDistrictName,
-          subdistrictName: selectedSubdistrictName,
-          stateCode: stateCode,
-          districtCode: districtCode,
-          subdistrictCode: subdistrictCode
+      if(townVillageContainer.innerHTML !== ""){
+        townVillageContainer.innerHTML = ""; // Reset villages
+      }
+          // ✅ Clear persistentSelections when state changes
+      persistentSelections = {
+            villages: {}, // Reset villages
+            totalPopulation: 0
         };
-  
-        
-      } else {
-        // Remove from persistent selections
-        console.log("else persi");
-        
-        delete persistentSelections.villages[villageId];
+
+
+      if (stateCode) {
+          fetch(`/population/get-districts/${stateCode}/`)
+              .then(response => response.json())
+              .then(districts => {
+                  districts.forEach(d => districtNames[d.district_code] = d.region_name);
+                  populateCheckboxList(districtList, districts, "district_code", "region_name", selectedDistricts, fetchSubdistricts);
+              })
+              .catch(error => console.error("Error fetching districts:", error));
+          
       }
-      console.log("Persistent selection, ",persistentSelections);
-      
-      handleAllSelection();
-      updateSelectedVillages();
-    });
   });
 
-  if (totalPop > 0) {
-    villagePopulations[0] = totalPop;
-  }
-
-  // Update the display after populating to show all selections
-  updateSelectedVillages();
-}
-
-// Function to handle "All" selection behavior
-function handleAllSelection() {
-  const checkboxes = document.querySelectorAll('.village-checkbox');
-  const allCheckbox = Array.from(checkboxes).find(cb => 
-    cb.labels && cb.labels.length > 0 && cb.labels[0].textContent.trim() === "All"
-  );
-
-  if (allCheckbox && allCheckbox.checked) {
-    // Get current state, district and subdistrict codes
-    const stateCode = document.getElementById('state').value;
-    const districtCode = document.getElementById('district').value;
-    const subdistrictCode = document.getElementById('subdistrict').value;
-    
-    // Add the "All" selection with the current subdistrict context
-    const subdistrict = document.getElementById("subdistrict");
-    const selectedSubdistrictName = subdistrict.options[subdistrict.selectedIndex]?.text || "Unknown Subdistrict";
-    
-    checkboxes.forEach(cb => {
-      if (cb !== allCheckbox) {
-        cb.checked = false;
-        cb.disabled = true;
-        
-        // Remove individual villages from this subdistrict from persistent selections
-        delete persistentSelections.villages[cb.value];
+  // Fetch subdistricts when districts are selected
+  function fetchSubdistricts() {
+      const stateCode = stateDropdown.value;
+      selectedSubdistricts.clear();
+      if(subdistrictList.innerHTML !== ""){
+        subdistrictList.innerHTML = ""; // Clear subdistricts before repopulating
       }
+          // ✅ Clear previously selected villages since subdistricts are changing
+    persistentSelections.villages = {};
+    persistentSelections.totalPopulation = 0;
+    townVillageContainer.innerHTML = ""; // Also reset the displayed villages
+
+      if (selectedDistricts.size > 0) {
+          selectedDistricts.forEach(districtCode => {
+              fetch(`/population/get-subdistricts/${stateCode}/${districtCode}/`)
+                  .then(response => response.json())
+                  .then(subdistricts => {
+                    // console.log("sd",subdistricts);
+                    subdistricts.forEach(d => subdistrictNames[d.subdistrict_code] =d.region_name);
+                      if (subdistricts.length > 0) {
+                          let districtName = districtNames[districtCode];
+                          let header = document.createElement("div");
+                          header.classList.add("fw-bold", "mt-2", "border-bottom", "pb-1");
+                          header.textContent = districtName;
+                          subdistrictList.appendChild(header);
+                      }
+
+                      populateCheckboxList(subdistrictList, subdistricts, "subdistrict_code", "region_name", selectedSubdistricts, fetchVillages, districtCode);
+                           
+                  })
+                  .catch(error => console.error("Error fetching subdistricts:", error));
+          });
+         
+          
+      }
+  }
+
+  // Handle subdistrict selection (store district-subdistrict pair)
+  subdistrictList.addEventListener("change", function (event) {
+      if (event.target.classList.contains("subdistrict-checkbox")) {
+          const districtCode = event.target.getAttribute("data-district");
+          const subdistrictCode = event.target.value;
+          const combinedCode = `${districtCode}-${subdistrictCode}`;
+
+          if (event.target.checked) {
+              selectedSubdistricts.add(combinedCode);
+          } else {
+              selectedSubdistricts.delete(combinedCode);
+          }
+
+          console.log("Updated Selected Subdistricts:", Array.from(selectedSubdistricts));
+          fetchVillages();
+      }
+  });
+
+  
+function fetchVillages() {
+  
+  const stateCode = document.getElementById("state").value;
+  selectedVillages.clear();
+
+  let villageFetchPromises = [];
+
+  selectedSubdistricts.forEach(combinedCode => {
+      if (!combinedCode.includes("-")) {
+          console.error(`Invalid subdistrictCode format: ${combinedCode}`);
+          return;
+      }
+
+      let [districtCode, subCode] = combinedCode.split("-");
+
+      let fetchPromise = fetch(`/population/get-villages/${stateCode}/${districtCode}/${subCode}/`)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error(`HTTP error! Status: ${response.status}`);
+              }
+              return response.json();
+          })
+          .then(villages => {
+            // console.log("villages fetchvillg,",villages);
+            villages.forEach(village => {
+                villageToDistrict[village.village_code] = districtCode;
+                villageToSubdistrict[village.village_code] = subCode;
+            });
+            
+            villages.forEach(d => {
+              code_to_villagename[d.village_code] = d.region_name;
+              code_to_villagepopulation_2011[d.village_code] = d.population_2011;
+            });
+          
+              const subdistrictPopulationSum = villages
+                  .filter(item => item.region_name.startsWith("Subdistrict"))
+                  .reduce((sum, item) => sum + (item.population_2011 || 0), 0);
+
+              const filteredVillages = villages.filter(item => item.village_code !== 0);
+              filteredVillages.sort((a, b) => (a.region_name || '').localeCompare(b.region_name || ''));
+
+              const allEntry = villages.find(item => item.village_code === 0 && item.region_name.trim() === "All");
+              if (allEntry && allEntry.population_2011 === null) {
+                  allEntry.population_2011 = subdistrictPopulationSum;
+              }
+              if (allEntry) {
+                  filteredVillages.unshift(allEntry);
+              }
+
+              return { subdistrictCode: combinedCode, villages: filteredVillages };
+          });
+
+      villageFetchPromises.push(fetchPromise);
+  });
+
+  Promise.all(villageFetchPromises)
+      .then(results => {
+          townVillageContainer.innerHTML = ""; // Clear previous content
+
+          // Create a horizontally scrollable container
+          let scrollContainer = document.createElement("div");
+          scrollContainer.classList.add("scrollable-container"); // Add class for styling
+          // console.log("resultg ",results);
+          
+          results.forEach(({ subdistrictCode, villages }) => {
+              let [districtCode, subCode] = subdistrictCode.split("-");
+
+              // Create a column for each subdistrict
+              let colDiv = document.createElement("div");
+              colDiv.classList.add("village-column");
+
+              let header = document.createElement("div");
+              header.classList.add("fw-bold", "border-bottom", "pb-1", "mb-2", "village-header"); // Add CSS class
+              
+              // Ensure long names don't overflow
+              let districtName = districtNames[districtCode] || `District ${districtCode}`;
+              let subdistrictName = subdistrictNames[subCode] || `Subdistrict ${subCode}`;
+              
+              header.textContent = `${districtName} - ${subdistrictName}`;
+              header.title = `${districtName} - ${subdistrictName}`; // Tooltip on hover to show full name
+              colDiv.appendChild(header);
+              
+              // console.log("villages ", villages);
+              
+              populateCheckboxList(colDiv, villages, "village_code", "region_name", selectedVillages, updateSelectedVillages);
+
+              scrollContainer.appendChild(colDiv); // Append column to scrollable container
+          });
+
+          townVillageContainer.appendChild(scrollContainer); // Append scrollable container
+      })
+      .catch(error => console.error("Error fetching villages:", error));
+}
+
+
+
+
+
+  // Populate standard dropdown
+  function populateDropdown(dropdown, data, valueField, textField) {
+      dropdown.innerHTML = '<option value="">Select an Option</option>';
+      data.forEach(item => {
+          let option = document.createElement("option");
+          option.value = item[valueField];
+          option.textContent = item[textField];
+          dropdown.appendChild(option);
+      });
+  }
+ 
+  function populateCheckboxList(container, data, valueField, textField, selectedSet, callback = null, districtCode = null) {
+    data.forEach(item => {
+        let listItem = document.createElement("div");
+        listItem.classList.add("form-check");
+
+        let checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = item[valueField];
+        checkbox.id = `${valueField}-${item[valueField]}`;
+        checkbox.classList.add("form-check-input");
+
+        if (districtCode) {
+            checkbox.classList.add("subdistrict-checkbox");
+            checkbox.setAttribute("data-district", districtCode);
+        }
+
+        let label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        label.classList.add("form-check-label");
+        label.textContent = item[textField];
+
+        checkbox.addEventListener("change", function () {
+            let formattedCode = districtCode ? `${districtCode}-${this.value}` : this.value;
+
+            if (this.checked) {
+                selectedSet.add(formattedCode);
+            } else {
+                selectedSet.delete(formattedCode);
+            }
+
+            if (callback) callback();
+            updateSelectedVillages(); // Ensure persistentSelections updates on checkbox change
+        });
+
+        listItem.appendChild(checkbox);
+        listItem.appendChild(label);
+        container.appendChild(listItem);
     });
-  } else {
-    checkboxes.forEach(cb => cb.disabled = false);
-  }
+
+    if (callback) callback();
 }
 
-// Only clear the village options display, not the selections
-function clearCurrentVillageOptions() {
-  const container = document.getElementById('town-village-container');
-  container.innerHTML = '<span>No options available</span>';
-}
 
-// Reset town/village selections (only used if explicitly needed)
-function resetAllSelections() {
-  persistentSelections.villages = {};
-  persistentSelections.totalPopulation = 0;
-  const selectedContainer = document.getElementById('selected-villages');
-  selectedContainer.innerHTML = '<span>No selections made</span>';
-  const totalPopulationContainer = document.getElementById('total-population');
-  totalPopulationContainer.innerHTML = '';
-}
 
-// Update selected villages display
-function updateSelectedVillages() {
-  const selectedContainer = document.getElementById('selected-villages');
-  const totalPopulationContainer = document.getElementById('total-population');
-  let totalPopulation = 0;
-  
-  // Get the current visible checkboxes that are checked
-  const currentCheckboxes = document.querySelectorAll('.village-checkbox:checked');
-  
-  // Check if there are any selections at all (either visible or stored)
-  if (currentCheckboxes.length === 0 && Object.keys(persistentSelections.villages).length === 0) {
-    selectedContainer.innerHTML = '<span>No selections made</span>';
-    totalPopulationContainer.innerHTML = '';
-    return;
-  }
+  // Update selected villages display
+  function updateSelectedVillages() {
+    selectedVillagesContainer.innerHTML = ""; // Clear previous selections
+    let totalPopulation = 0;
 
-  selectedContainer.innerHTML = '';
-  
-  // Display all persistent selections
-  for (const [villageId, villageData] of Object.entries(persistentSelections.villages)) {
-    const population = villageData.population || 0;
-    totalPopulation += population;
+    persistentSelections.villages = {}; // Reset persistentSelections
+    persistentSelections.totalPopulation = 0;
 
-    const div = document.createElement('div');
+    // Create a table for better formatting
+    let table = document.createElement("table");
+    table.classList.add("table", "table-bordered", "mt-2");
+
+    // Create table header
+    let thead = document.createElement("thead");
+    let headerRow = document.createElement("tr");
+
+    let villageHeader = document.createElement("th");
+    villageHeader.textContent = "Village Name";
+
+    let populationHeader = document.createElement("th");
+    populationHeader.textContent = "Population (2011)";
+
+    headerRow.appendChild(villageHeader);
+    headerRow.appendChild(populationHeader);
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Table body
+    let tbody = document.createElement("tbody");
+
+    selectedVillages.forEach(villageCode => { 
+        let villageName = code_to_villagename[villageCode] || `Village ${villageCode}`;
+        let villagePopulation = parseInt(code_to_villagepopulation_2011[villageCode] || "0", 10);
+
+        // Retrieve district and subdistrict details
+        let districtCode = villageToDistrict[villageCode] || "";
+        let subdistrictCode = villageToSubdistrict[villageCode] || "";
+        let districtName = districtNames[districtCode] || `District ${districtCode}`;
+        let subdistrictName = subdistrictNames[subdistrictCode] || `Subdistrict ${subdistrictCode}`;
+        let stateCode = stateDropdown.value; // Current selected state
+
+        // Store village details in persistentSelections
+        persistentSelections.villages[villageCode] = {
+            name: villageName,
+            population: villagePopulation,
+            districtName: districtName,
+            subdistrictName: subdistrictName,
+            stateCode: stateCode,
+            districtCode: districtCode,
+            subdistrictCode: subdistrictCode
+        };
+
+        // Create row for village data
+        let row = document.createElement("tr");
+
+        let villageCell = document.createElement("td");
+        villageCell.textContent = villageName;
+
+        let populationCell = document.createElement("td");
+        populationCell.textContent = villagePopulation;
+
+        row.appendChild(villageCell);
+        row.appendChild(populationCell);
+        tbody.appendChild(row);
+
+        totalPopulation += villagePopulation;
+    });
+
+    table.appendChild(tbody);
+    selectedVillagesContainer.appendChild(table);
+
+    // Display total population at the bottom
+    let totalPopulationElement = document.createElement("div");
+    totalPopulationElement.classList.add("fw-bold", "mt-2");
+    totalPopulationElement.textContent = `Total Population: ${totalPopulation}`;
     
-    // Different formatting based on the village name
-    if (villageData.name === " All ") {
-      div.textContent = `${villageData.subdistrictName} (Population of 2011: ${population})`;
-    } else if (villageData.name.includes("Subdistrict")) {
-      div.textContent = `${villageData.districtName} (Population of 2011: ${population})`;
-    } else {
-      div.textContent = `${villageData.name} (Population of 2011: ${population})`;
-    }
-    
-   
-    selectedContainer.appendChild(div);
-  }
+    selectedVillagesContainer.appendChild(totalPopulationElement);
 
-  totalPopulationContainer.textContent = `Total Population: ${totalPopulation}`;
-  
-  // Update the persistent total
-  persistentSelections.totalPopulation = totalPopulation;
-  
-  // For debugging - log the current selections with location codes
-  console.log("Current selections:", persistentSelections);
-  console.log(Object.values(persistentSelections.villages));
-  
+    // Update persistentSelections total population
+    persistentSelections.totalPopulation = totalPopulation;
 }
-  
+
+
+
+
+
+
+});
 
 
 
@@ -383,8 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const state = document.getElementById('state').value;
-      const district = document.getElementById('district').value;
-      const subdistrict = document.getElementById('subdistrict').value;
+      const district = document.getElementById('district-btn').value;
+      const subdistrict = document.getElementById('subdistrict-btn').value;
 
       let timeSeries = document.getElementById('time-series');
       let demographic = document.getElementById('demographic-based');
@@ -510,8 +559,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Async function to handle demographic calculations
 async function calculateDemographic(summedList) {
   const state = document.getElementById('state').value;
-  const district = document.getElementById('district').value;
-  const subdistrict = document.getElementById('subdistrict').value;
+  const district = document.getElementById('district-btn').value;
+  const subdistrict = document.getElementById('subdistrict-btn').value;
       
   const singleYearOption = document.getElementById('single-year-option');
   const rangeYearOption = document.getElementById('range-year-option');
@@ -995,8 +1044,8 @@ function displayGrowthTable(summedList) {
       if (alertShown) return;
 
       const state = document.getElementById('state').value;
-      const district = document.getElementById('district').value;
-      const subdistrict = document.getElementById('subdistrict').value;
+      const district = document.getElementById('district-btn').value;
+      const subdistrict = document.getElementById('subdistrict-btn').value;
       const selectedVillages = Object.keys(persistentSelections.villages)
       .map(villageId => `village-${villageId}`);
       const persistentSelection = persistentSelections.villages
@@ -1068,317 +1117,6 @@ function displayGrowthTable(summedList) {
 
 
 
-  // --editinggg_________________-----
-
-  document.addEventListener("DOMContentLoaded", function () {
-    console.log("Script loaded and running");
-
-    const graphMapping = {
-        "graphbtn-arithmetic-increase": "container-arithmetic-increase",
-        "graphbtn-geometric-increase": "container-geometric-increase",
-        "graphbtn-logistic-growth": "container-logistic-growth",
-        "graphbtn-exponential-growth": "container-exponential-growth",
-        "graphbtn-incremental-growth": "container-incremental-growth",
-    };
-
-    // Make sure all graph containers are hidden at the start
-    Object.values(graphMapping).forEach(graphContainerId => {
-        const container = document.getElementById(graphContainerId);
-        if (container) {
-            console.log(`Hiding container: ${graphContainerId}`);
-            container.style.display = "none";
-        } else {
-            console.log(`Container not found & its no a problem: ${graphContainerId}`);
-        }
-    });
-
-    // Attach event listeners to all buttons
-    Object.keys(graphMapping).forEach(btnId => {
-        const button = document.getElementById(btnId);
-        const graphContainer = document.getElementById(graphMapping[btnId]);
-
-        if (button && graphContainer) {
-            console.log(`Adding event listener to button: ${btnId}`);
-            button.addEventListener("click", function (e) {
-                e.preventDefault(); 
-
-                if (graphContainer.style.display === "none" || graphContainer.style.display === "") {
-                    console.log(`Showing: ${graphMapping[btnId]}`);
-                    graphContainer.style.display = "block";
-                } else {
-                    console.log(`Hiding: ${graphMapping[btnId]}`);
-                    graphContainer.style.display = "none";
-                }
-            });
-        } else {
-            console.log(`Button or container not found for ID and its no a problem: ${btnId}`);
-        }
-    });
-});
-
-
-
-
-
-
-      
-
-   
-
-
-
-
-
-       
-
-
-
-
-  
-      // button.addEventListener("click", function (e) {
-      //   e.preventDefault(); // Prevent any default behavior
-  
-      //   const selectedContainer = document.getElementById(graphContainerId);
-  
-      //   // If the clicked graph is already visible, hide it
-      //   if (selectedContainer.style.display === "block") {
-      //     selectedContainer.style.display = "none";
-      //     selectedContainer.classList.remove("active");
-  
-      //     // If no graph is visible, hide the entire graphsView section
-      //     const anyGraphVisible = Object.values(graphMapping).some(
-      //       (id) => document.getElementById(id).style.display === "block"
-      //     );
-  
-      //     if (!anyGraphVisible) {
-      //       graphsView.style.display = "none";
-      //     }
-      //   } else {
-      //     // Hide all graphs before showing the selected one
-      //     Object.values(graphMapping).forEach((containerId) => {
-      //       const container = document.getElementById(containerId);
-      //       container.style.display = "none"; // Hide all graphs
-      //       container.classList.remove("active");
-      //     });
-  
-      //     // Show the graphs section
-      //     graphsView.style.display = "block";
-  
-      //     // Show the selected graph container
-      //     selectedContainer.style.display = "block";
-      //     selectedContainer.classList.add("active");
-      //   }
-      // });
-   
-  
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // js for showing graph-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-  // document.addEventListener("DOMContentLoaded", () => {
-  //   const projectionMethodDropdown = document.getElementById("projection-method");
-  //   const toggleViewButton = document.getElementById("toggle-view");
-  //   const tablesView = document.querySelector(".tables-view");
-  //   const graphsView = document.querySelector(".graphs-view");
-  
-  //   let isGraphView = false;
-  
-  //   toggleViewButton.addEventListener("click", (e) => {
-  //     e.preventDefault();
-  //     isGraphView = !isGraphView;
-  //     toggleViewButton.textContent = isGraphView ? "Show Tables" : "Show Graphs";
-  //     tablesView.style.display = isGraphView ? "none" : "block";
-  //     graphsView.style.display = isGraphView ? "block" : "none";
-  
-  //     // Update visibility of graphs based on selected method
-  //     updateProjectionView();
-  //   });
-  
-  //   projectionMethodDropdown.addEventListener("change", updateProjectionView);
-  
-  //   function updateProjectionView() {
-  //     const selectedMethod = projectionMethodDropdown.value;
-    
-  //     // Hide all tables and graphs
-  //     document.querySelectorAll(".projection-item").forEach((item) => (item.style.display = "none"));
-  //     document.querySelectorAll(".graph-container").forEach((container) => {
-  //       container.classList.remove("active");
-  //       container.style.display = "none"; // Hide graph containers by default
-  //     });
-    
-  //     if (selectedMethod === "all") {
-  //       if (isGraphView) {
-  //         document.querySelectorAll(".graph-container").forEach((container) => {
-  //           container.classList.add("active");
-  //           container.style.display = "block"; // Ensure visibility
-  //         });
-  //       } else {
-  //         document.querySelectorAll(".projection-item").forEach((item) => (item.style.display = "block"));
-  //       }
-  //     } else {
-  //       const specificTable = document.querySelector(`.projection-item.${selectedMethod}`);
-  //       const specificGraphContainer = document.getElementById(`container-${selectedMethod}`);
-    
-  //       if (isGraphView) {
-  //         specificGraphContainer.classList.add("active");
-  //         specificGraphContainer.style.display = "block"; // Show selected graph
-  //       } else if (specificTable) {
-  //         specificTable.style.display = "block"; // Show selected table
-  //       }
-  //     }
-  //   }
-    
-    
-  // });
-
-  
-  // Example renderGraph function call:
-    function renderGraph(canvasId, datasets, labels) {
-      console.log("I inside renderGraph");
-      
-      const canvas = document.getElementById(canvasId);
-    
-      // Ensure the parent container and canvas are visible
-      const container = canvas.parentElement;
-      container.style.display = "block";
-      container.classList.add("active");
-    
-      // Resize the canvas to fit its container
-      canvas.style.width = "100%";
-      canvas.style.height = "350px"; // Set an appropriate height
-    
-      // Destroy the previous chart instance if it exists
-      if (chartInstances[canvasId]) {
-        chartInstances[canvasId].destroy();
-      }
-    
-      // Create a new chart instance and store it
-      const ctx = canvas.getContext("2d");
-      const chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: datasets,
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false, // Adjust dimensions freely
-          plugins: {
-            legend: { position: "top" },
-          },
-          scales: {
-            x: { title: { display: true, text: "Years" } },
-            y: { title: { display: true, text: "Population" } },
-          },
-        },
-      });
-    
-      // Save the chart instance for future cleanup
-      chartInstances[canvasId] = chart;
-    }
-
-    function renderGraphforSingleYear(canvasId, datasets, labels) {
-      console.log("Inside renderGraphforSingleYear");
-  
-      const canvas = document.getElementById(canvasId);
-      const container = canvas.parentElement;
-      container.style.display = "block";
-      container.classList.add("active");
-  
-      // Resize canvas
-      canvas.style.width = "100%";
-      canvas.style.height = "350px";
-  
-      // Destroy previous chart instance if it exists
-      if (chartInstances[canvasId]) {
-          chartInstances[canvasId].destroy();
-      }
-  
-      // Extract village names as X-axis labels
-      const villageNames = datasets.map(dataset => dataset.label);
-  
-      // Create dynamic datasets based on available years in labels
-      const newDatasets = labels.map((year, index) => ({
-          label: `${year} Population`,
-          data: datasets.map(dataset => dataset.data[index]), // Get data dynamically
-          backgroundColor: getRandomColor(), // Random color for each year
-          borderColor: getRandomColor(),
-          borderWidth: 1,
-      }));
-  
-      // Create a grouped bar chart (Histogram)
-      const ctx = canvas.getContext("2d");
-      const chart = new Chart(ctx, {
-          type: "bar",
-          data: {
-              labels: villageNames, // Set village names as X-axis labels
-              datasets: newDatasets, // Datasets for all available years
-          },
-          options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                  legend: { position: "top" },
-              },
-              scales: {
-                  x: {
-                      title: { display: true, text: "Villages" },
-                      stacked: false, // Show bars side by side
-                  },
-                  y: {
-                      title: { display: true, text: "Population" },
-                      stacked: false,
-                  },
-              },
-          },
-      });
-  
-      // Save chart instance for future cleanup
-      chartInstances[canvasId] = chart;
-  }
-
-  
-  
-
-  
-  function getRandomColor() {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1404,164 +1142,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // document.getElementById("submit-btn").addEventListener("click", function (e) {
-  //     e.preventDefault();
-  //     const state = document.getElementById('state').value;
-  //     const district = document.getElementById('district').value;
-  //     const subdistrict = document.getElementById('subdistrict').value;
-      
-  //     const singleYearOption = document.getElementById('single-year-option');
-  //     const rangeYearOption = document.getElementById('range-year-option');
-  //     const targetYearInput = document.getElementById('target-year');
-  //     const targetYearRangeStart = document.getElementById('target-year-range-start');
-  //     const targetYearRangeEnd = document.getElementById('target-year-range-end');
 
-  //     const birthRate = document.getElementById("birth-rate").value;
-  //     const deathRate = document.getElementById("death-rate").value;
-  //     const emigrationRate = document.getElementById("emigration-rate").value;
-  //     const immigrationRate = document.getElementById("immigration-rate").value;
-
-  //     const selectedVillages = Array.from(
-  //       document.querySelectorAll('#town-village-container input[type="checkbox"]:checked')
-  //     ).map(village => village.id);
-
-  //     const baseYear = document.getElementById('base-year').value;
-
-  //     const yearSelection = document.querySelector('input[name="year_selection"]:checked')?.value;
-  //     let targetYear = null;
-  //     let targetYearRange = null;
-
-
-  //   // Handle year selection options
-  //   singleYearOption.addEventListener('change', () => {
-  //     targetYearInput.disabled = false;
-  //     targetYearRangeStart.disabled = true;
-  //     targetYearRangeEnd.disabled = true;
-  //   });
-
-  //   rangeYearOption.addEventListener('change', () => {
-  //     targetYearInput.disabled = true;
-  //     targetYearRangeStart.disabled = false;
-  //     targetYearRangeEnd.disabled = false;
-  //   });
-    
-
-  //   if (yearSelection === 'single') {
-  //     targetYear = targetYearInput.value;
-  //   } else if (yearSelection === 'range') {
-  //     targetYearRange = {
-  //       start: targetYearRangeStart.value,
-  //       end: targetYearRangeEnd.value,
-  //     };
-  //   }
-
-  //   console.log("Birth rate = ", birthRate);
-  //   console.log("Death rate = ", deathRate);
-  //   console.log("emigration rate = ", emigrationRate);
-  //   console.log("immigration rate = ", immigrationRate);
-    
-
-  //   // Validate inputs
-  //   if (!state || selectedVillages.length === 0 || !birthRate || !deathRate || !emigrationRate || !immigrationRate ||
-  //     (!targetYear && (!targetYearRange || !targetYearRange.start || !targetYearRange.end))) {
-  //     alert('Please fill out all required fields.');
-  //     return;
-  //   }
-
-    
-  //   const requestData = {
-  //     state,
-  //     district,
-  //     subdistrict,
-  //     villages : selectedVillages,
-  //     baseYear,
-  //     targetYear,
-  //     targetYearRange,
-  //     birthRate,
-  //     deathRate,
-  //     emigrationRate,
-  //     immigrationRate,
-  //   };
-
-    
-
-  //   fetch("/population/calculate-demographic/", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify(requestData),
-  //   })
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       if(data.success && data.result){
-  //         console.log("result = ", data.result); 
-  //         populateTable(data.result, "demographic-attribute"); 
-
-  //         let containKeyGrowthPercent = false;
-  //         //Render graphs for each method
-  //         Object.keys(data.result).forEach(method => {
-  //           const methodData = data.result[method];
-  //           console.log("Method data, ",methodData);
-            
-  //           Object.keys(methodData).forEach(key => {
-  //             if ("Growth Percent" in methodData[key]) {
-  //                 containKeyGrowthPercent=true
-  //             } 
-  //         });
-            
-          
-  //           Object.values(methodData).forEach(yearData => {
-  //             if (yearData) {
-  //               delete yearData["Growth Percent"]; // If present, delete
-  //             }
-  //           });
-          
-  //           console.log("method ", method);
-  //           console.log("methodData ", methodData);
-          
-  //           const canvasId = `graph-${method}`;
-  //           console.log("Canvas Id ", canvasId);
-          
-  //           const labels = Object.keys(methodData[Object.keys(methodData)[0]]); // Years
-  //           console.log("Object.keys(methodData)[0] ", Object.keys(methodData)[0]);
-  //           console.log("methodData[Object.keys(methodData)[0]]", methodData[Object.keys(methodData)[0]]);
-          
-  //           const datasets = Object.entries(methodData).map(([village, yearData]) => {
-  //             console.log(" Object.values(yearData) ", Object.values(yearData));
-  //             return {
-  //               label: code_to_villagename[village],
-  //               data: Object.values(yearData),
-  //               borderColor: getRandomColor(),
-  //               borderWidth: 2,
-  //               fill: false,
-  //             };
-  //           });
-          
-  //           console.log("datasets original", datasets);
-  //           console.log("labels original ", labels);
-          
-  //           if(!containKeyGrowthPercent){
-              
-  //             const datasets2 = datasets.map(dataset => ({
-  //               ...dataset, 
-  //               data: dataset.data.slice(1) // Remove the 0th index value
-  //              }));
-  //              labels.shift()
-
-  //             console.log("datasets2", datasets2);
-  //             console.log("labels for range years", labels);
-              
-  //             renderGraph(canvasId, datasets2, labels);
-  //           }
-  //           else{
-  //             renderGraphforSingleYear(canvasId,datasets,labels)
-  //           }
-  //         });
-  //       }
-        
-  //     })
-  //     .catch(error => console.error("Error:", error));
-      
-  // });
 
   function populateTable(result, projectionMethod) {
     const containerId = `dynamic-tables-${projectionMethod}`;
