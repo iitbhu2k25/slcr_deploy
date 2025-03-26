@@ -5,90 +5,119 @@
 <style>
   /* populationcssmodify start*/
   .dropdown-menu {
-            max-height: 250px;
-            overflow-y: auto;
-            width: 100%;
-        }
-        .dropdown-header {
-            font-weight: bold;
-            padding: 8px 10px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #ddd;
-        }
-    /* Ensure the village container has horizontal scrolling */
-    #town-village-container {
-        width: 100%;
-        overflow-x: auto;  /* Enable horizontal scrolling */
-        overflow-y: hidden; /* Prevent vertical scrolling inside */
-        white-space: nowrap;
-        max-width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-    }
+    max-height: 250px;
+    overflow-y: auto;
+    width: 100%;
+  }
 
-    /* Ensure the scroll container always shows scrollbar */
-    .scrollable-container {
-        display: flex;
-        flex-wrap: nowrap; /* Prevent wrapping */
-        width: max-content; /* Expand based on content */
-        min-width: 100%; /* Ensure it fits container */
-        overflow-x: scroll;
-        overflow-y: hidden;
-        padding-bottom: 10px;
-    }
+  .dropdown-header {
+    font-weight: bold;
+    padding: 8px 10px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+  }
 
-    .village-header {
-    white-space: nowrap;  /* Prevents text from wrapping */
-    overflow: hidden;      /* Hides overflowing text */
-    text-overflow: ellipsis; /* Adds "..." for overflowed text */
-    max-width: 100%;       /* Ensures it stays inside the container */
-    display: block;        /* Ensures proper layout */
-}
+  /* Ensure the village container has horizontal scrolling */
+  #town-village-container {
+    width: 100%;
+    overflow-x: auto;
+    /* Enable horizontal scrolling */
+    overflow-y: hidden;
+    /* Prevent vertical scrolling inside */
+    white-space: nowrap;
+    max-width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+  }
+
+  /* Ensure the scroll container always shows scrollbar */
+  .scrollable-container {
+    display: flex;
+    flex-wrap: nowrap;
+    /* Prevent wrapping */
+    width: max-content;
+    /* Expand based on content */
+    min-width: 100%;
+    /* Ensure it fits container */
+    overflow-x: scroll;
+    overflow-y: hidden;
+    padding-bottom: 10px;
+  }
+
+  .village-header {
+    white-space: nowrap;
+    /* Prevents text from wrapping */
+    overflow: hidden;
+    /* Hides overflowing text */
+    text-overflow: ellipsis;
+    /* Adds "..." for overflowed text */
+    max-width: 100%;
+    /* Ensures it stays inside the container */
+    display: block;
+    /* Ensures proper layout */
+  }
 
 
-    /* Village column settings */
-    .village-column {
-        flex: 0 0 auto; /* Prevent shrinking */
-        width: 250px; /* Fixed column width */
-        border: 1px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-        margin-right: 10px;
-        background-color: #f8f9fa;
-    }
+  /* Village column settings */
+  .village-column {
+    flex: 0 0 auto;
+    /* Prevent shrinking */
+    width: 250px;
+    /* Fixed column width */
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    margin-right: 10px;
+    background-color: #f8f9fa;
+  }
 
-    /* Always show horizontal scrollbar */
-    #town-village-container::-webkit-scrollbar {
-        height: 8px; /* Adjust scrollbar thickness */
-    }
+  /* Always show horizontal scrollbar */
+  #town-village-container::-webkit-scrollbar {
+    height: 8px;
+    /* Adjust scrollbar thickness */
+  }
 
-    #town-village-container::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 4px;
-    }
+  #town-village-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
 
-    #town-village-container::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
-    #selected-villages {
-    display: block;          /* Ensures each name is on a new line */
-    max-height: 200px;       /* Limit height to enable scrolling */
-    overflow-y: auto;        /* Enable vertical scrolling */
-    overflow-x: hidden;      /* Prevent horizontal overflow */
+  #town-village-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+  #selected-villages {
+    display: block;
+    /* Ensures each name is on a new line */
+    max-height: 200px;
+    /* Limit height to enable scrolling */
+    overflow-y: auto;
+    /* Enable vertical scrolling */
+    overflow-x: hidden;
+    /* Prevent horizontal overflow */
     padding: 8px;
-    border: 1px solid #ccc;  /* Optional: Add border for visibility */
-    background-color: #f8f9fa; /* Light gray background */
-    word-wrap: break-word;   /* Ensures long names don’t overflow */
-}
+    border: 1px solid #ccc;
+    /* Optional: Add border for visibility */
+    background-color: #f8f9fa;
+    /* Light gray background */
+    word-wrap: break-word;
+    /* Ensures long names don’t overflow */
+  }
 
-.village-item {
-    display: block;          /* Each item appears on a new line */
-    white-space: nowrap;     /* Prevents text wrapping */
-    overflow: hidden;        /* Hide overflowing text */
-    text-overflow: ellipsis; /* Show "..." if the text is too long */
+  .village-item {
+    display: block;
+    /* Each item appears on a new line */
+    white-space: nowrap;
+    /* Prevents text wrapping */
+    overflow: hidden;
+    /* Hide overflowing text */
+    text-overflow: ellipsis;
+    /* Show "..." if the text is too long */
     padding: 5px;
-    border-bottom: 1px solid #ddd; /* Optional: Add a separator */
-}
+    border-bottom: 1px solid #ddd;
+    /* Optional: Add a separator */
+  }
+
   /* end */
 
 
@@ -96,11 +125,19 @@
 
 
 
-  .hidden { display: none; }
-  .stage { margin-bottom: 30px; padding: 15px; border: 1px solid #ccc; }
+  .hidden {
+    display: none;
+  }
+
+  .stage {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #ccc;
+  }
+
   .bordered {
-    border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important; 
-    border-radius: 5px; 
+    border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;
+    border-radius: 5px;
     padding: 15px;
     margin-bottom: 15px;
   }
@@ -114,62 +151,65 @@
 
   /* Stage Navigation Sidebar */
   .stage-nav {
-      position: absolute;
-      top: 240px;
-      left: 20px;
-      width: 220px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      z-index: 1000;
+    position: absolute;
+    top: 240px;
+    left: 20px;
+    width: 220px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    z-index: 1000;
   }
+
   .stage-nav ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
   }
+
   .stage-nav li {
-      padding: 8px 10px;
-      margin-bottom: 5px;
-      border-radius: 3px;
-      cursor: pointer;
+    padding: 8px 10px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+    cursor: pointer;
   }
+
   .stage-nav li.current {
-      background-color: #007bff;
-      color: #fff;
-      font-weight: bold;
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
   }
+
   .stage-nav li.completed {
-      background-color: #28a745;
-      color: #fff;
+    background-color: #28a745;
+    color: #fff;
   }
+
   .stage-nav li.pending {
-      background-color: #6c757d;
-      color: #fff;
+    background-color: #6c757d;
+    color: #fff;
   }
+
   /* Adjust main content margin so it doesn't overlap the sidebar */
   .main-content {
-      margin-left: 260px;
+    margin-left: 260px;
   }
-  
+
   .error {
-  background-color: red !important;
-  color: white !important;
-  font-weight: bold;
-}
-.box {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 10px;
-  margin-top: 10px;
-  background-color: #f9f9f9; /* Optional: light background */
-}
+    background-color: red !important;
+    color: white !important;
+    font-weight: bold;
+  }
 
-
-  
-
-  
+  .box {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 25px;
+    background-color: #f9f9f9;
+    /* Optional: light background */
+  }
 </style>
 
 <!-- Include jsPDF Library -->
@@ -207,35 +247,37 @@
       {% csrf_token %}
       <!-- State, District, Sub-District, and Town/Village Selection -->
       <div class="row">
-         <!-- State Selection -->
-         <div class="col-md-4 mb-3">
+        <!-- State Selection -->
+        <div class="col-md-4 mb-3">
           <label for="state">State:</label>
           <select id="state" name="state" class="form-select">
-              <option value="">Select a State</option>
+            <option value="">Select a State</option>
           </select>
-      </div>
+        </div>
 
-      <!-- Multi-Select District -->
-      <div class="col-md-4 mb-3">
+        <!-- Multi-Select District -->
+        <div class="col-md-4 mb-3">
           <label>District:</label>
           <div class="dropdown">
-              <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown" id="district-btn">
-                  Select Districts
-              </button>
-              <ul class="dropdown-menu p-2" id="district-list"></ul>
+            <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown"
+              id="district-btn">
+              Select Districts
+            </button>
+            <ul class="dropdown-menu p-2" id="district-list"></ul>
           </div>
-      </div>
+        </div>
 
-      <!-- Multi-Select Sub-District -->
-      <div class="col-md-4 mb-3">
+        <!-- Multi-Select Sub-District -->
+        <div class="col-md-4 mb-3">
           <label>Sub-District:</label>
           <div class="dropdown">
-              <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown" id="subdistrict-btn">
-                  Select Sub-Districts
-              </button>
-              <ul class="dropdown-menu p-2" id="subdistrict-list"></ul>
+            <button class="btn btn-outline-primary w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown"
+              id="subdistrict-btn">
+              Select Sub-Districts
+            </button>
+            <ul class="dropdown-menu p-2" id="subdistrict-list"></ul>
           </div>
-      </div>
+        </div>
         <div class="form-group col-10 col-md-5 mb-3">
           <label for="town-village">Town/Village:</label>
           <div id="town-village-container" class="border p-2" style="max-height: 200px; overflow-y: auto;">
@@ -264,9 +306,9 @@
               <input type="radio" id="single-year-option" name="year_selection" value="single" class="me-2" checked>
               <label for="single-year-option" class="me-2 mb-0">Single Year:</label>
               <input type="number" id="target-year" name="target_year" class="form-control form-control-sm"
-                    placeholder="Enter year (e.g., 2025)" style="max-width: 175px;"
-                    onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                placeholder="Enter year (e.g., 2025)" style="max-width: 175px;"
+                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
             <span id="target-year-error" class="text-danger small"></span>
             <!-- Range Year Option -->
@@ -275,14 +317,14 @@
               <label for="range-year-option" class="me-2 mb-0">Range of Years:</label>
               <div class="input-group input-group-sm" style="max-width: 450px;">
                 <input type="number" id="target-year-range-start" name="target_year_start" class="form-control"
-                      placeholder="Start Year (e.g., 2020)" style="min-width: 120px;"
-                      onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                      oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled required>
+                  placeholder="Start Year (e.g., 2020)" style="min-width: 120px;"
+                  onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled required>
                 <span class="input-group-text">to</span>
                 <input type="number" id="target-year-range-end" name="target_year_end" class="form-control"
-                      placeholder="End Year (e.g., 2030)" style="min-width: 120px;"
-                      onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                      oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled>
+                  placeholder="End Year (e.g., 2030)" style="min-width: 120px;"
+                  onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '')" disabled>
               </div>
             </div>
             <span id="target-year-range-error" class="text-danger small"></span>
@@ -294,76 +336,88 @@
 
           <div class="d-flex flex-wrap gap-3">
             <div class="form-check">
-              <input type="checkbox" id="time-series" name="prediction_method" value="time-series" class="form-check-input">
+              <input type="checkbox" id="time-series" name="prediction_method" value="time-series"
+                class="form-check-input">
               <label for="time-series" class="form-check-label">Time-Series</label>
             </div>
             <div class="form-check">
-              <input type="checkbox" id="demographic-based" name="prediction_method" value="demographic-based" class="form-check-input">
+              <input type="checkbox" id="demographic-based" name="prediction_method" value="demographic-based"
+                class="form-check-input">
               <label for="demographic-based" class="form-check-label">Demographic-Based</label>
             </div>
             <div class="form-check">
-              <input type="checkbox" id="cohort-component" name="prediction_method" value="cohort-component" class="form-check-input">
+              <input type="checkbox" id="cohort-component" name="prediction_method" value="cohort-component"
+                class="form-check-input">
               <label for="cohort-component" class="form-check-label">Cohort-Component</label>
             </div>
           </div>
-          
+
           <div id="time-series-options" style="display: none; border: 1px inset; padding: 8px;">
             <!-- Time-Series options content -->
-            
+
             <p class="mb-2">Select Time-Series Methods:</label>
             <div class="d-flex flex-column gap-2">
               <div class="form-check">
-                <input type="checkbox" id="arithmetic-increase" name="timeseries_method" value="arithmetic-increase" class="form-check-input">
+                <input type="checkbox" id="arithmetic-increase" name="timeseries_method" value="arithmetic-increase"
+                  class="form-check-input">
                 <label for="arithmetic-increase" class="form-check-label">Arithmetic Increase Method</label>
               </div>
               <div class="form-check">
-                <input type="checkbox" id="geometric-increase" name="timeseries_method" value="geometric-increase" class="form-check-input">
+                <input type="checkbox" id="geometric-increase" name="timeseries_method" value="geometric-increase"
+                  class="form-check-input">
                 <label for="geometric-increase" class="form-check-label">Geometric Increase Method</label>
               </div>
               <div class="form-check">
-                <input type="checkbox" id="logistic-growth" name="timeseries_method" value="logistic-growth" class="form-check-input">
+                <input type="checkbox" id="logistic-growth" name="timeseries_method" value="logistic-growth"
+                  class="form-check-input">
                 <label for="logistic-growth" class="form-check-label">Logistic Growth Method</label>
               </div>
               <div class="form-check">
-                <input type="checkbox" id="exponential-growth" name="timeseries_method" value="exponential-growth" class="form-check-input">
+                <input type="checkbox" id="exponential-growth" name="timeseries_method" value="exponential-growth"
+                  class="form-check-input">
                 <label for="exponential-growth" class="form-check-label">Exponential Growth Method</label>
               </div>
               <div class="form-check">
-                <input type="checkbox" id="incremental-growth" name="timeseries_method" value="incremental-growth" class="form-check-input">
+                <input type="checkbox" id="incremental-growth" name="timeseries_method" value="incremental-growth"
+                  class="form-check-input">
                 <label for="incremental-growth" class="form-check-label">Incremental Growth Method</label>
               </div>
             </div>
           </div>
-          
+
           <div id="demographic-options" style="display: none; border: 1px inset; padding: 8px; margin-top:10px">
             <p class="mb-2"> Fill Demographic-Based Fields</label>
-            <div class="row"> 
+            <div class="row">
               <div class="form-group col-12 col-md-3 mb-3">
                 <label for="birth-rate">Annual Birth Rate:</label>
-                <input type="number" id="birth-rate" name="birth_rate" class="form-control" placeholder="Enter births/1000 people">
+                <input type="number" id="birth-rate" name="birth_rate" class="form-control"
+                  placeholder="Enter births/1000 people">
               </div>
               <div class="form-group col-12 col-md-3 mb-3">
                 <label for="death-rate">Annual Death Rate:</label>
-                <input type="number" id="death-rate" name="death_rate" class="form-control" placeholder="Enter deaths/1000 people">
+                <input type="number" id="death-rate" name="death_rate" class="form-control"
+                  placeholder="Enter deaths/1000 people">
               </div>
               <div class="form-group col-12 col-md-3 mb-3">
                 <label for="emigration-rate">Annual Emigration Rate:</label>
-                <input type="number" id="emigration-rate" name="emigration_rate" class="form-control" placeholder="Enter emigrations/1000 people">
+                <input type="number" id="emigration-rate" name="emigration_rate" class="form-control"
+                  placeholder="Enter emigrations/1000 people">
               </div>
               <div class="form-group col-12 col-md-3 mb-3">
                 <label for="immigration-rate">Annual Immigration Rate:</label>
-                <input type="number" id="immigration-rate" name="immigration_rate" class="form-control" placeholder="Enter immigrations/1000 people">
+                <input type="number" id="immigration-rate" name="immigration_rate" class="form-control"
+                  placeholder="Enter immigrations/1000 people">
               </div>
             </div>
           </div>
-          
-          <div id="cohort-options"  style="display: none; border: 1px inset; padding: 8px; margin-top:10px">
+
+          <div id="cohort-options" style="display: none; border: 1px inset; padding: 8px; margin-top:10px">
             <!-- Cohort-Component options content -->
             <p>Cohort-Component Options</p>
           </div>
 
-          
-         
+
+
           <button id="clc" class="btn btn-dark mt-4">Calculate</button>
           <button class="btn btn-warning mt-4" style="margin-left: 12px;">Reset</button>
         </div>
@@ -394,7 +448,8 @@
     <h3 class="text-center mb-4" style="color: #00ccff;">Water Demand Calculation</h3>
     <p>The predicted population from the previous stage will be used for the calculation.</p>
     <!-- Previous Stage Button -->
-    <button id="prev-stage-btn" type="button" class="btn btn-secondary mb-3">Previous Stage: Population Forecasting</button>
+    <button id="prev-stage-btn" type="button" class="btn btn-secondary mb-3">Previous Stage: Population
+      Forecasting</button>
     <div class="form-group mb-3">
       <label>Select Water Demand Components:</label>
       <div>
@@ -416,16 +471,15 @@
     </div>
     <!-- Floating Fields (Hidden by default) -->
     <div class="box floating-fields-container mb-3 hidden">
-      <h6><b>Floating Fields</b></h6>
-      <label for="enu_dropdown" class="form-label">Enumeration Type:</label>
-      <select id="enu_dropdown" name="enu_dropdown" class="form-select">
-        <option value="Total">Select option</option>
-        <option value="Total">Total</option>
-        <option value="Urban">Urban</option>
-        <option value="Rural">Rural</option>
-      </select>
+      <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Floating Fields</b>
+      </h6><br>
+
+
       <label for="floating_field" class="form-label">Floating Population (2011):</label>
-      <input id="floating_field" name="floating_field" type="text" class="form-control" placeholder="Enter floating population">
+      <input id="floating_field" name="floating_field" type="text" class="form-control"
+        placeholder="Enter floating population">
       <label for="facility_dropdown" class="form-label">Facility Type:</label>
       <select id="facility_dropdown" name="facility_dropdown" class="form-select">
         <option value="provided">Bathing facilities provided</option>
@@ -435,7 +489,11 @@
     </div>
     <!-- Institutional Fields (Hidden by default) -->
     <div id="institutional_container" class="box hidden">
-      <h6><b>Institutional Fields</b></h6>
+      <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Institutional Fields</b>
+      </h6>
+
       <!-- Hospitals Section -->
       <div class="row mb-3">
         <div class="col-md-6">
@@ -448,11 +506,11 @@
         </div>
         <div class="col-md-6">
           <label for="hospitals_less_100" class="form-label">Hospitals with < 100 Beds (Units):</label>
-          <input type="number" id="hospitals_less_100" class="form-control" placeholder="Enter number">
+              <input type="number" id="hospitals_less_100" class="form-control" placeholder="Enter number">
         </div>
         <div class="col-md-6">
           <label for="beds_less_100" class="form-label">Beds in Hospitals with < 100 Beds:</label>
-          <input type="number" id="beds_less_100" class="form-control" placeholder="Enter number">
+              <input type="number" id="beds_less_100" class="form-control" placeholder="Enter number">
         </div>
       </div>
       <!-- Hotels Section -->
@@ -614,7 +672,11 @@
     </div>
     <!-- Firefighting Water Demand Calculation (Hidden by default) -->
     <div id="firefighting_container" class="box hidden">
-      <h6><b>Firefighting Water Demand Calculation</b></h6>
+      <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Firefighting Water Demand Calculation</b>
+      </h6>
+
       <div class="form-group mb-3">
         <label class="form-label">Select Firefighting Methods:</label>
         <div class="form-check">
@@ -630,15 +692,20 @@
           <label class="form-check-label" for="firefighting_method_buston">Buston Method</label>
         </div>
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" value="american_insurance" id="firefighting_method_american_insurance">
-          <label class="form-check-label" for="firefighting_method_american_insurance">American Insurance Association Method</label>
+          <input class="form-check-input" type="checkbox" value="american_insurance"
+            id="firefighting_method_american_insurance">
+          <label class="form-check-label" for="firefighting_method_american_insurance">American Insurance Association
+            Method</label>
         </div>
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" value="ministry_urban" id="firefighting_method_ministry_urban">
-          <label class="form-check-label" for="firefighting_method_ministry_urban">Ministry of Urban Development Method</label>
+          <input class="form-check-input" type="checkbox" value="ministry_urban"
+            id="firefighting_method_ministry_urban">
+          <label class="form-check-label" for="firefighting_method_ministry_urban">Ministry of Urban Development
+            Method</label>
         </div>
       </div>
-      <button id="calculate-firefighting-demand" type="button" class="btn btn-dark">Calculate Firefighting Water Demand</button>
+      <button id="calculate-firefighting-demand" type="button" class="btn btn-dark">Calculate Firefighting Water
+        Demand</button>
       <div id="firefighting_result" class="mt-3"></div>
     </div>
     <button id="calculate-water-demand" type="button" class="btn btn-dark">Calculate Water Demand</button>
@@ -657,7 +724,8 @@
     <!-- Water Supply Input Fields -->
     <!-- Surface Water Supply (SWS) -->
     <h5>Surface Water Supply (SWS)</h5>
-    <div class="border rounded p-3 mb-3" style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
+    <div class="border rounded p-3 mb-3"
+      style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
       <div class="col-md-4">
         <label for="surface_water" class="form-label">Surface Water Supply (SWS) (in MLD):</label>
         <input type="number" id="surface_water" name="surface_water" class="form-control" min="0">
@@ -666,7 +734,8 @@
 
     <!-- Groundwater Supply (GWS) -->
     <h5>Groundwater Supply (GWS)</h5>
-    <div class="border rounded p-3 mb-3" style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
+    <div class="border rounded p-3 mb-3"
+      style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
       <div class="row mb-3">
         <div class="col-md-4">
           <label for="direct_groundwater" class="form-label">Direct Groundwater Supply (in MLD):</label>
@@ -692,7 +761,8 @@
 
     <!-- Alternate Water Supply (AWS) -->
     <h5>Alternate Water Supply (AWS)</h5>
-    <div class="border rounded p-3 mb-3" style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
+    <div class="border rounded p-3 mb-3"
+      style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
       <div class="row mb-3">
         <div class="col-md-4">
           <label for="direct_alternate" class="form-label">Direct Alternate Water Supply (in MLD):</label>
@@ -766,13 +836,15 @@
       <!-- If "manual" is chosen -->
       <div id="manual_fields" class="hidden">
         <label for="domestic_supply_input" class="form-label">Domestic Water Supply (MLD):</label>
-        <input type="number" id="domestic_supply_input" class="form-control" placeholder="Enter domestic supply" min="0">
+        <input type="number" id="domestic_supply_input" class="form-control" placeholder="Enter domestic supply"
+          min="0">
       </div>
 
       <!-- If "modeled" is chosen -->
       <div id="modeled_fields" class="hidden">
         <label for="unmetered_supply_input" class="form-label">Unmetered Water Supply (optional):</label>
-        <input type="number" id="unmetered_supply_input" class="form-control" placeholder="Enter unmetered supply" min="0">
+        <input type="number" id="unmetered_supply_input" class="form-control" placeholder="Enter unmetered supply"
+          min="0">
         <!-- We'll compute using computedPopulation. -->
       </div>
     </div>
@@ -794,63 +866,63 @@
 <!-- Inline Script for Persistent Info, Stage Transition, Water Demand Calculation, and Toggling Extra Fields -->
 <script>
 
-  
+
   function updatePersistentInfo() {
-      // State is still a regular dropdown
-      const stateDropdown = document.getElementById('state');
-      const stateText = stateDropdown.options[stateDropdown.selectedIndex]?.text || "State";
-      
-      // For Districts - get all checked checkboxes in the district dropdown
-      const districtCheckboxes = document.querySelectorAll('#district-list input[type="checkbox"]:checked');
-      const districtNames = Array.from(districtCheckboxes)
-        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
-        .filter(name => name !== "");
-      const districtText = districtNames.length > 0 ? districtNames.join(', ') : "District";
-      
-      // For Sub-Districts - get all checked checkboxes in the subdistrict dropdown
-      const subdistrictCheckboxes = document.querySelectorAll('#subdistrict-list input[type="checkbox"]:checked');
-      const subdistrictNames = Array.from(subdistrictCheckboxes)
-        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
-        .filter(name => name !== "");
-      const subdistrictText = subdistrictNames.length > 0 ? subdistrictNames.join(', ') : "Sub-District";
-      
-      // Village handling remains the same
-      const villageCheckboxes = document.querySelectorAll('#town-village-container input[type="checkbox"]:checked');
-      const villageNames = Array.from(villageCheckboxes)
-        .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
-        .filter(name => name !== "")
-        .join(', ') || "Village";
-      
-      // Year handling remains the same
-      let yearText = "Year";
-      const yearOption = document.querySelector('input[name="year_selection"]:checked')?.value;
-      if (yearOption === "single") {
-        yearText = document.getElementById('target-year').value || "Year";
-      } else if (yearOption === "range") {
-        const start = document.getElementById('target-year-range-start').value;
-        const end = document.getElementById('target-year-range-end').value;
-        yearText = start && end ? `${start} to ${end}` : "Year";
-      }
-      
-      // Update the display elements
-      document.getElementById('selected-state').textContent = stateText;
-      document.getElementById('selected-district').textContent = districtText;
-      document.getElementById('selected-subdistrict').textContent = subdistrictText;
-      document.getElementById('selected-village').textContent = villageNames;
-      document.getElementById('selected-year').textContent = yearText;
-      
-      // Optional: Update the dropdown button text to reflect selections
-      if (districtNames.length > 0) {
-        document.getElementById('district-btn').textContent = 
-          districtNames.length > 1 ? `${districtNames.length} Districts Selected` : districtNames[0];
-      }
-      
-      if (subdistrictNames.length > 0) {
-        document.getElementById('subdistrict-btn').textContent = 
-          subdistrictNames.length > 1 ? `${subdistrictNames.length} Sub-Districts Selected` : subdistrictNames[0];
-      }
+    // State is still a regular dropdown
+    const stateDropdown = document.getElementById('state');
+    const stateText = stateDropdown.options[stateDropdown.selectedIndex]?.text || "State";
+
+    // For Districts - get all checked checkboxes in the district dropdown
+    const districtCheckboxes = document.querySelectorAll('#district-list input[type="checkbox"]:checked');
+    const districtNames = Array.from(districtCheckboxes)
+      .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+      .filter(name => name !== "");
+    const districtText = districtNames.length > 0 ? districtNames.join(', ') : "District";
+
+    // For Sub-Districts - get all checked checkboxes in the subdistrict dropdown
+    const subdistrictCheckboxes = document.querySelectorAll('#subdistrict-list input[type="checkbox"]:checked');
+    const subdistrictNames = Array.from(subdistrictCheckboxes)
+      .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+      .filter(name => name !== "");
+    const subdistrictText = subdistrictNames.length > 0 ? subdistrictNames.join(', ') : "Sub-District";
+
+    // Village handling remains the same
+    const villageCheckboxes = document.querySelectorAll('#town-village-container input[type="checkbox"]:checked');
+    const villageNames = Array.from(villageCheckboxes)
+      .map(cb => cb.nextElementSibling ? cb.nextElementSibling.textContent.trim() : "")
+      .filter(name => name !== "")
+      .join(', ') || "Village";
+
+    // Year handling remains the same
+    let yearText = "Year";
+    const yearOption = document.querySelector('input[name="year_selection"]:checked')?.value;
+    if (yearOption === "single") {
+      yearText = document.getElementById('target-year').value || "Year";
+    } else if (yearOption === "range") {
+      const start = document.getElementById('target-year-range-start').value;
+      const end = document.getElementById('target-year-range-end').value;
+      yearText = start && end ? `${start} to ${end}` : "Year";
+    }
+
+    // Update the display elements
+    document.getElementById('selected-state').textContent = stateText;
+    document.getElementById('selected-district').textContent = districtText;
+    document.getElementById('selected-subdistrict').textContent = subdistrictText;
+    document.getElementById('selected-village').textContent = villageNames;
+    document.getElementById('selected-year').textContent = yearText;
+
+    // Optional: Update the dropdown button text to reflect selections
+    if (districtNames.length > 0) {
+      document.getElementById('district-btn').textContent =
+        districtNames.length > 1 ? `${districtNames.length} Districts Selected` : districtNames[0];
+    }
+
+    if (subdistrictNames.length > 0) {
+      document.getElementById('subdistrict-btn').textContent =
+        subdistrictNames.length > 1 ? `${subdistrictNames.length} Sub-Districts Selected` : subdistrictNames[0];
+    }
   }
-  
+
   document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('state').addEventListener('change', updatePersistentInfo);
     document.getElementById('district-btn').addEventListener('change', updatePersistentInfo);
@@ -859,23 +931,23 @@
     document.getElementById('target-year-range-start').addEventListener('input', updatePersistentInfo);
     document.getElementById('target-year-range-end').addEventListener('input', updatePersistentInfo);
     document.getElementById('town-village-container').addEventListener('change', updatePersistentInfo);
-  
+
     // Next Stage Button: Hide population section, show water demand section
     document.getElementById('next-stage-btn').addEventListener('click', function (e) {
       e.preventDefault();
-      
+
       // Save the selected projection forecast
       const selectedRadio = document.querySelector('input[name="projection-method"]:checked');
       console.log("selectedradionbtun", selectedRadio);
-      
+
       if (!selectedRadio) {
         alert('Please select a projection method before proceeding.');
         return;
       }
-      
+
       const selectedMethod = selectedRadio.value;
       console.log("Selected method:", selectedMethod);
-      
+
       // Check if the global summedList is available and contains the selected method
       if (!window.summedList || !window.summedList[selectedMethod]) {
         alert('Forecast data for the selected method is not available.');
@@ -883,7 +955,7 @@
         return;
       }
       console.log("window.summedList[selectedMethod]", window.summedList[selectedMethod]);
-      
+
       // Save the forecast data to the global computedPopulation variable
       window.computedPopulation = window.summedList[selectedMethod];
       console.log("Saved forecast for water demand:", window.computedPopulation);
@@ -899,7 +971,7 @@
         // Remove any error styling if calculation exists
         document.getElementById('nav-population').classList.remove('error');
       }
-      
+
       // Now transition to the Water Demand stage
       document.getElementById('population-stage').style.display = 'none';
       document.getElementById('water-demand-stage').style.display = 'block';
@@ -946,7 +1018,7 @@
     });
 
     // Add navigation click handlers so that clicking on a stage redirects to that stage
-    document.getElementById('nav-population').addEventListener('click', function() {
+    document.getElementById('nav-population').addEventListener('click', function () {
       document.getElementById('population-stage').style.display = 'block';
       document.getElementById('water-demand-stage').style.display = 'none';
       document.getElementById('water-supply-stage').style.display = 'none';
@@ -955,7 +1027,7 @@
       document.getElementById('population-stage').scrollIntoView({ behavior: 'smooth' });
     });
 
-    document.getElementById('nav-demand').addEventListener('click', function() {
+    document.getElementById('nav-demand').addEventListener('click', function () {
       document.getElementById('population-stage').style.display = 'none';
       document.getElementById('water-demand-stage').style.display = 'block';
       document.getElementById('water-supply-stage').style.display = 'none';
@@ -964,7 +1036,7 @@
       document.getElementById('water-demand-stage').scrollIntoView({ behavior: 'smooth' });
     });
 
-    document.getElementById('nav-supply').addEventListener('click', function() {
+    document.getElementById('nav-supply').addEventListener('click', function () {
       document.getElementById('population-stage').style.display = 'none';
       document.getElementById('water-demand-stage').style.display = 'none';
       document.getElementById('water-supply-stage').style.display = 'block';
@@ -973,7 +1045,7 @@
       document.getElementById('water-supply-stage').scrollIntoView({ behavior: 'smooth' });
     });
 
-    document.getElementById('nav-sewage').addEventListener('click', function() {
+    document.getElementById('nav-sewage').addEventListener('click', function () {
       document.getElementById('population-stage').style.display = 'none';
       document.getElementById('water-demand-stage').style.display = 'none';
       document.getElementById('water-supply-stage').style.display = 'none';
@@ -1050,18 +1122,18 @@
     // Replace these multipliers/formulas with your actual formulas.
     function calculateFirefightingDemand(method, popVal) {
       let demand = 0;
-      switch(method) {
+      switch (method) {
         case "kuchling":
-          demand = (4.582/100) * Math.sqrt(popVal / 1000);
+          demand = (4.582 / 100) * Math.sqrt(popVal / 1000);
           break;
         case "freeman":
-          demand = (1.635/100) * ((popVal / 5000) + 10);
+          demand = (1.635 / 100) * ((popVal / 5000) + 10);
           break;
         case "buston":
-          demand = (8.155/100) * Math.sqrt(popVal / 1000);
+          demand = (8.155 / 100) * Math.sqrt(popVal / 1000);
           break;
         case "american_insurance":
-          demand = (6.677/100) * Math.sqrt(popVal / 1000) * (1 - 0.01 * Math.sqrt(popVal / 1000));
+          demand = (6.677 / 100) * Math.sqrt(popVal / 1000) * (1 - 0.01 * Math.sqrt(popVal / 1000));
           break;
         case "ministry_urban":
           demand = Math.sqrt(popVal) / 1000;
@@ -1072,17 +1144,17 @@
       return demand;
     }
 
-    
+
     // Firefighting water demand calculation handler using checkboxes.
-    document.getElementById('calculate-firefighting-demand').addEventListener('click', function() {
+    document.getElementById('calculate-firefighting-demand').addEventListener('click', function () {
       const ffResultContainer = document.getElementById('firefighting_result');
-      
+
       // Ensure that computedPopulation is available.
       if (typeof computedPopulation === 'undefined') {
         ffResultContainer.innerHTML = "<p>Error: Population not computed. Please calculate population first.</p>";
         return;
       }
-      
+
       // Get selected methods from checkboxes.
       const selectedMethods = [];
       const possibleMethods = ["kuchling", "freeman", "buston", "american_insurance", "ministry_urban"];
@@ -1092,15 +1164,15 @@
           selectedMethods.push(method);
         }
       });
-      
+
       if (selectedMethods.length === 0) {
         ffResultContainer.innerHTML = "<p>Error: Please select at least one firefighting method.</p>";
         return;
       }
-      
+
       // Create a global object to store firefighting results per year.
       window.firefightingResults = {};
-      
+
       // Build table header: Year, Population, then a column per selected method.
       let ffTableHTML = `
         <div class="table-responsive">
@@ -1111,7 +1183,7 @@
                 <th>Population</th>`;
       selectedMethods.forEach(method => {
         let label;
-        switch(method) {
+        switch (method) {
           case "kuchling": label = "Kuchling's"; break;
           case "freeman": label = "Freeman"; break;
           case "buston": label = "Buston"; break;
@@ -1122,7 +1194,7 @@
         ffTableHTML += `<th>${label}</th>`;
       });
       ffTableHTML += `</tr></thead><tbody>`;
-      
+
       // Loop through each projection year in computedPopulation.
       for (let yr in computedPopulation) {
         let popVal = Number(computedPopulation[yr]);
@@ -1131,7 +1203,7 @@
         selectedMethods.forEach(method => {
           window.firefightingResults[yr][method] = calculateFirefightingDemand(method, popVal);
         });
-        
+
         ffTableHTML += `<tr>
           <td>${yr}</td>
           <td>${popVal.toLocaleString()}</td>`;
@@ -1140,9 +1212,9 @@
         });
         ffTableHTML += `</tr>`;
       }
-      
+
       ffTableHTML += `</tbody></table></div>`;
-      
+
       // Build a single radio button group for selecting one method for all years.
       let radioGroupHTML = `<div class="mt-3"><p>Select a Firefighting Method to apply for all years:</p>`;
       selectedMethods.forEach((method, index) => {
@@ -1153,32 +1225,32 @@
           </div>`;
       });
       radioGroupHTML += `</div>`;
-      
+
       ffResultContainer.innerHTML = ffTableHTML + radioGroupHTML;
     });
-  
+
     // Water Demand Calculation Handler – Build one combined table with a column for each selected component.
     document.getElementById('calculate-water-demand').addEventListener('click', async function () {
       const resultContainer = document.getElementById('water-demand-result');
       let outputHTML = "";
-  
+
       // Determine which water demand components are selected.
       const domesticChecked = document.getElementById('domestic').checked;
       const floatingChecked = document.getElementById('floating').checked;
       const institutionalChecked = document.getElementById('institutional').checked;
       const firefightingChecked = document.getElementById('firefighting').checked;
-  
+
       if (!domesticChecked && !floatingChecked && !institutionalChecked && !firefightingChecked) {
         resultContainer.innerHTML = "<p>Please select at least one water demand component.</p>";
         return;
       }
-  
+
       // Ensure computedPopulation is available (set by your population prediction code).
       if (typeof computedPopulation === 'undefined') {
         resultContainer.innerHTML = "<p>Error: Population not computed. Please calculate population first.</p>";
         return;
       }
-  
+
       // We expect computedPopulation to be an object (time-series projection)
       if (typeof computedPopulation === "object") {
         // Define base population from 2011 for scaling.
@@ -1187,7 +1259,7 @@
           resultContainer.innerHTML = "<p>Error: 2011 population data missing in computed population.</p>";
           return;
         }
-  
+
         // For Floating: retrieve 2011 floating population and facility multiplier.
         let floatingPopulation2011 = 0, facilityMultiplier = 0;
         if (floatingChecked) {
@@ -1198,17 +1270,17 @@
           }
           const facilityType = document.getElementById('facility_dropdown').value;
           if (facilityType === 'provided') {
-              facilityMultiplier = 45;
+            facilityMultiplier = 45;
           } else if (facilityType === 'notprovided') {
-              facilityMultiplier = 25;
+            facilityMultiplier = 25;
           } else if (facilityType === 'onlypublic') {
-              facilityMultiplier = 15;
+            facilityMultiplier = 15;
           } else {
-              resultContainer.innerHTML = "<p>Error: Please select a valid Facility Type for floating demand.</p>";
-              return;
+            resultContainer.innerHTML = "<p>Error: Please select a valid Facility Type for floating demand.</p>";
+            return;
           }
         }
-  
+
         // For Institutional: compute a base 2011 value from input fields (example: hospitals*beds*450 divided by 1,000,000)
         let institutionalBase = 0;
         if (institutionalChecked) {
@@ -1246,7 +1318,7 @@
           const employees_factories_no_bathroom = parseFloat(document.getElementById('employees_factories_no_bathroom')?.value) || 0;
           const cinemas = parseFloat(document.getElementById('cinemas')?.value) || 0;
           const population_load_cinemas = parseFloat(document.getElementById('population_load_cinemas')?.value) || 0;
-  
+
           institutionalBase = (
             (hospitals_100_units * beds_100 * 450) +
             (hospitals_less_100 * beds_less_100 * 350) +
@@ -1267,7 +1339,7 @@
             (cinemas * population_load_cinemas * 15)
           ) / 1000000;
         }
-  
+
         // Get the chosen firefighting method from the radio button group.
         let chosenFirefightingMethod = null;
         if (firefightingChecked) {
@@ -1276,7 +1348,7 @@
             chosenFirefightingMethod = selectedRadio.value;
           }
         }
-  
+
         // Build table header
         outputHTML += `
           <div class="table-responsive">
@@ -1291,7 +1363,7 @@
         if (firefightingChecked) { outputHTML += `<th>Firefighting Water Demand (MLD)</th>`; }
         outputHTML += `<th>Total Demand (MLD)</th>`;
         outputHTML += `</tr></thead><tbody>`;
-  
+
         // Loop over each projection year in computedPopulation.
         for (let yr in computedPopulation) {
           let popValue = Number(computedPopulation[yr]);
@@ -1305,7 +1377,7 @@
             } else if (popValue < 100000) {
               domesticMultiplier = 135 / 1000000;
             } else {
-              domesticMultiplier = 135/1000000;
+              domesticMultiplier = 135 / 1000000;
             }
             let domesticDemand = popValue * domesticMultiplier;
             totalDemand += domesticDemand;
@@ -1347,7 +1419,7 @@
         if (institutionalChecked) { outputHTML += `<th>Institutional Water Demand</th>`; }
         if (firefightingChecked) { outputHTML += `<th>Firefighting Water Demand</th>`; }
         outputHTML += `<th>Total Demand (MLD)</th></tr></thead><tbody>`;
-  
+
         outputHTML += `<tr><td>Single Year</td><td>${popValue.toLocaleString()}</td>`;
         let totalDemand = 0;
         if (domesticChecked) {
@@ -1368,13 +1440,13 @@
           const facilityType = document.getElementById('facility_dropdown').value;
           let facilityMultiplier;
           if (facilityType === 'provided') {
-              facilityMultiplier = 45;
+            facilityMultiplier = 45;
           } else if (facilityType === 'notprovided') {
-              facilityMultiplier = 25;
+            facilityMultiplier = 25;
           } else if (facilityType === 'onlypublic') {
-              facilityMultiplier = 15;
+            facilityMultiplier = 15;
           } else {
-              facilityMultiplier = 0;
+            facilityMultiplier = 0;
           }
           let floatingDemand = floatingPopulation2011 * facilityMultiplier / 1000000;
           totalDemand += floatingDemand;
@@ -1461,15 +1533,15 @@
     const reuseWaterInput = document.getElementById('reuse_water');
     const calculateWaterSupplyBtn = document.getElementById('calculate-water-supply');
     const waterSupplyResult = document.getElementById('water-supply-result');
-  
+
     function updateGroundwaterDisableState() {
       if (directGroundwaterInput.value.trim() !== "") {
         numTubewells.disabled = true;
         dischargeRate.disabled = true;
         operatingHours.disabled = true;
       } else if (numTubewells.value.trim() !== "" ||
-                 dischargeRate.value.trim() !== "" ||
-                 operatingHours.value.trim() !== "") {
+        dischargeRate.value.trim() !== "" ||
+        operatingHours.value.trim() !== "") {
         directGroundwaterInput.disabled = true;
         numTubewells.disabled = false;
         dischargeRate.disabled = false;
@@ -1485,7 +1557,7 @@
     numTubewells.addEventListener("input", updateGroundwaterDisableState);
     dischargeRate.addEventListener("input", updateGroundwaterDisableState);
     operatingHours.addEventListener("input", updateGroundwaterDisableState);
-  
+
     function updateAlternateDisableState() {
       if (directAlternateInput.value.trim() !== "") {
         rooftopTankInput.disabled = true;
@@ -1493,9 +1565,9 @@
         surfaceRunoffInput.disabled = true;
         reuseWaterInput.disabled = true;
       } else if (rooftopTankInput.value.trim() !== "" ||
-                 aquiferRechargeInput.value.trim() !== "" ||
-                 surfaceRunoffInput.value.trim() !== "" ||
-                 reuseWaterInput.value.trim() !== "") {
+        aquiferRechargeInput.value.trim() !== "" ||
+        surfaceRunoffInput.value.trim() !== "" ||
+        reuseWaterInput.value.trim() !== "") {
         directAlternateInput.disabled = true;
         rooftopTankInput.disabled = false;
         aquiferRechargeInput.disabled = false;
@@ -1514,7 +1586,7 @@
     aquiferRechargeInput.addEventListener("input", updateAlternateDisableState);
     surfaceRunoffInput.addEventListener("input", updateAlternateDisableState);
     reuseWaterInput.addEventListener("input", updateAlternateDisableState);
-  
+
     calculateWaterSupplyBtn.addEventListener('click', () => {
       waterSupplyResult.innerHTML = '<h5 class="text-primary">Calculating Water Supply...</h5>';
       setTimeout(() => {
@@ -1524,37 +1596,38 @@
         const dischargeRateValue = parseFloat(dischargeRate.value) || 0;
         const operatingHoursValue = parseFloat(operatingHours.value) || 0;
         const groundwaterCalc = numTubewellsValue * dischargeRateValue * operatingHoursValue;
-  
+
         if (directGroundwaterValue > 0 &&
-            (numTubewellsValue > 0 || dischargeRateValue > 0 || operatingHoursValue > 0)) {
+          (numTubewellsValue > 0 || dischargeRateValue > 0 || operatingHoursValue > 0)) {
           waterSupplyResult.innerHTML = '<h4 class="text-danger">Error: Provide either direct groundwater supply or calculated groundwater supply, not both.</h4>';
           return;
         }
-  
+
         const groundwaterSupply = directGroundwaterValue > 0 ? directGroundwaterValue : groundwaterCalc;
-  
+
         const directAlternateValue = parseFloat(directAlternateInput.value) || 0;
         const rooftopTankValue = parseFloat(rooftopTankInput.value) || 0;
         const aquiferRechargeValue = parseFloat(aquiferRechargeInput.value) || 0;
         const surfaceRunoffValue = parseFloat(surfaceRunoffInput.value) || 0;
         const reuseWaterValue = parseFloat(reuseWaterInput.value) || 0;
         const alternateCalc = rooftopTankValue + aquiferRechargeValue + surfaceRunoffValue + reuseWaterValue;
-  
+
         if (directAlternateValue > 0 &&
-            (rooftopTankValue > 0 || aquiferRechargeValue > 0 || surfaceRunoffValue > 0 || reuseWaterValue > 0)) {
+          (rooftopTankValue > 0 || aquiferRechargeValue > 0 || surfaceRunoffValue > 0 || reuseWaterValue > 0)) {
           waterSupplyResult.innerHTML = '<h4 class="text-danger">Error: Provide either direct alternate supply or calculated alternate supply, not both.</h4>';
           return;
         }
-  
+
         const alternateWaterSupply = directAlternateValue > 0 ? directAlternateValue : alternateCalc;
-  
+
         const totalWaterSupply = surfaceWater + groundwaterSupply + alternateWaterSupply;
+        window.totalWaterSupply = totalWaterSupply.toFixed(2);
         waterSupplyResult.innerHTML = `<h4>Total Water Supply for Selected Region: ${totalWaterSupply.toFixed(2)} MLD</h4>`;
         console.log("Total Water Supply Calculated:", totalWaterSupply.toFixed(2));
       }, 700);
     });
-  
-   
+
+
 
     // =========================
     // Sewage Stage UI Toggling
@@ -1572,6 +1645,9 @@
       if (val === 'water_supply') {
         waterSupplyFields.classList.remove('hidden');
         domesticSewageFields.classList.add('hidden');
+        if (window.totalWaterSupply) {
+          document.getElementById('total_supply_input').value = window.totalWaterSupply;
+        }
       } else if (val === 'domestic_sewage') {
         waterSupplyFields.classList.add('hidden');
         domesticSewageFields.classList.remove('hidden');
@@ -1708,28 +1784,28 @@
       const unmeteredField = document.getElementById('unmetered_supply_input');
       const unmetered = parseFloat(unmeteredField.value) || 0;
       const totalCoefficient = (baseCoefficient + unmetered) * 0.80;
-  
+
       // Build the pollution load table
       let table = document.createElement('table');
       table.className = "table table-striped table-bordered";
       let thead = document.createElement('thead');
       let trHead = document.createElement('tr');
-  
+
       let thItem = document.createElement('th');
       thItem.textContent = "Item";
       let thPerCapita = document.createElement('th');
       thPerCapita.textContent = "Per Capita Contribution (g/c/d)";
       let thConcentration = document.createElement('th');
       thConcentration.textContent = "Concentration (mg/l)";
-  
+
       trHead.appendChild(thItem);
       trHead.appendChild(thPerCapita);
       trHead.appendChild(thConcentration);
       thead.appendChild(trHead);
       table.appendChild(thead);
-  
+
       let tbody = document.createElement('tbody');
-  
+
       const pollutionItems = [
         { name: "BOD", perCapita: 27.0 },
         { name: "COD", perCapita: 45.9 },
@@ -1742,13 +1818,13 @@
         { name: "Total Phosphorus", perCapita: 0.8 },
         { name: "Ortho Phosphorous", perCapita: 0.5 }
       ];
-  
+
       pollutionItems.forEach((item, index) => {
         let tr = document.createElement('tr');
-  
+
         let tdItem = document.createElement('td');
         tdItem.textContent = item.name;
-  
+
         let tdPerCapita = document.createElement('td');
         let inputPerCapita = document.createElement('input');
         inputPerCapita.type = "number";
@@ -1756,24 +1832,24 @@
         inputPerCapita.value = item.perCapita;
         inputPerCapita.id = "percapita_input_" + index;
         tdPerCapita.appendChild(inputPerCapita);
-  
+
         let tdConcentration = document.createElement('td');
         tdConcentration.id = "concentration_" + index;
         let concentration = (item.perCapita / totalCoefficient) * 1000;
         tdConcentration.textContent = concentration.toFixed(1);
-  
+
         tr.appendChild(tdItem);
         tr.appendChild(tdPerCapita);
         tr.appendChild(tdConcentration);
         tbody.appendChild(tr);
-  
+
         inputPerCapita.addEventListener('input', () => {
           let editedPerCapita = parseFloat(inputPerCapita.value) || 0;
           let newConcentration = (editedPerCapita / totalCoefficient) * 1000;
           tdConcentration.textContent = newConcentration.toFixed(1);
         });
       });
-  
+
       table.appendChild(tbody);
       // Wrap the table in a responsive container
       let responsiveDiv = document.createElement('div');
@@ -1815,7 +1891,7 @@
         img.src = url;
       });
     }
-    
+
 
     document.getElementById('download-pdf-btn').addEventListener('click', async function () {
       const { jsPDF } = window.jspdf;
@@ -1892,27 +1968,27 @@
 
       // Advanced helper: Add a reference with clickable URL.
       function addReference(refText, refUrl) {
-      // 1) Print the reference text normally (with wrapping)
-      const lines = doc.splitTextToSize(refText, maxWidth);
-      checkPageBreak(lines.length * lineHeight);
-      doc.text(lines, margin, y);
-      y += lines.length * lineHeight;
+        // 1) Print the reference text normally (with wrapping)
+        const lines = doc.splitTextToSize(refText, maxWidth);
+        checkPageBreak(lines.length * lineHeight);
+        doc.text(lines, margin, y);
+        y += lines.length * lineHeight;
 
-      // 2) Print the link on one line (fully clickable)
-      doc.setTextColor(173, 216, 230); // Light blue color
-      checkPageBreak(lineHeight);
-      doc.textWithLink(refUrl, margin, y, { url: refUrl });
-      y += lineHeight;
+        // 2) Print the link on one line (fully clickable)
+        doc.setTextColor(173, 216, 230); // Light blue color
+        checkPageBreak(lineHeight);
+        doc.textWithLink(refUrl, margin, y, { url: refUrl });
+        y += lineHeight;
 
-      doc.setTextColor(0, 0, 0);
-    }
+        doc.setTextColor(0, 0, 0);
+      }
 
 
 
       // Load logos (using the same logo for left and right in this example)
       try {
         const rightLogo = await loadImage("/static/Images/logo_final.png");
-        const leftLogo = await loadImage("/static/Images/iit_logo2.png");
+        const leftLogo = await loadImage("/static/Images/IITBHU_Logo.png");
 
         // Add logos on the left and right of the header.
         doc.addImage(leftLogo, "PNG", margin, y, leftLogoWidth, leftLogoHeight);
@@ -2056,7 +2132,7 @@
       }
       y += 8;
 
-      
+
 
       // 10. User Input Summary – include key input values
       addSectionTitle("User Input Summary:");
@@ -2135,27 +2211,27 @@
 
 
 
-  
+
   });
 
-  
-    // Toggle Prediction Options for Population Prediction Methods
-    // Toggle Prediction Options for Population Prediction Methods
-    function togglePredictionOptions() {
-      const timeSeriesOptions = document.getElementById('time-series-options');
-      const demographicOptions = document.getElementById('demographic-options');
-      const cohortOptions = document.getElementById('cohort-options');
 
-      timeSeriesOptions.style.display = document.getElementById('time-series').checked ? 'block' : 'none';
-      demographicOptions.style.display = document.getElementById('demographic-based').checked ? 'block' : 'none';
-      cohortOptions.style.display = document.getElementById('cohort-component').checked ? 'block' : 'none';
-    }
-  
-    togglePredictionOptions();
-  
-    document.querySelectorAll('input[name="prediction_method"]').forEach(function (radio) {
-      radio.addEventListener("change", togglePredictionOptions);
-    });
+  // Toggle Prediction Options for Population Prediction Methods
+  // Toggle Prediction Options for Population Prediction Methods
+  function togglePredictionOptions() {
+    const timeSeriesOptions = document.getElementById('time-series-options');
+    const demographicOptions = document.getElementById('demographic-options');
+    const cohortOptions = document.getElementById('cohort-options');
+
+    timeSeriesOptions.style.display = document.getElementById('time-series').checked ? 'block' : 'none';
+    demographicOptions.style.display = document.getElementById('demographic-based').checked ? 'block' : 'none';
+    cohortOptions.style.display = document.getElementById('cohort-component').checked ? 'block' : 'none';
+  }
+
+  togglePredictionOptions();
+
+  document.querySelectorAll('input[name="prediction_method"]').forEach(function (radio) {
+    radio.addEventListener("change", togglePredictionOptions);
+  });
 </script>
 
 

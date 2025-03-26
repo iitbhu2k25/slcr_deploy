@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let methods = [
               "arithmetic-increase",
               "geometric-increase",
-          
+              "logistic-growth",
               "exponential-growth",
               "incremental-growth"
           ];
