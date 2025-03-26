@@ -934,109 +934,112 @@ function downloadCSV(summedList, sortedYears) {
 
 
 function displayGrowthTable(summedList) {
-  console.log("Displaying growth table");
-
-  const resultsSection = document.getElementById('results-section-growth');
-  const resultsContainer = document.getElementById('results-container2');
-
-  // Clear previous results
-  resultsContainer.innerHTML = '';
-
-  if (Object.keys(summedList).length === 0) {
-      resultsContainer.innerHTML = "<p>No data available.</p>";
-      return;
+    console.log("Displaying growth table");
+  
+    const resultsSection = document.getElementById('results-section-growth');
+    const resultsContainer = document.getElementById('results-container2');
+  
+    // Clear previous results
+    resultsContainer.innerHTML = '';
+  
+    if (Object.keys(summedList).length === 0) {
+        resultsContainer.innerHTML = "<p>No data available.</p>";
+        return;
+    }
+  
+    // Create a responsive table container
+    const tableContainer = document.createElement('div');
+    tableContainer.className = 'table-responsive';
+    tableContainer.style.maxWidth = '100%';
+    tableContainer.style.overflowX = 'auto';
+  
+    // Create table
+    const table = document.createElement('table');
+    table.className = 'table table-bordered table-hover';
+  
+    // Extract all unique years
+    let allYears = new Set();
+    Object.values(summedList).forEach(yearData => {
+        Object.keys(yearData).forEach(year => allYears.add(year));
+    });
+  
+    // Sort years in ascending order
+    const sortedYears = [...allYears].sort((a, b) => a - b);
+    
+    // Define base year that will be used for calculations but not displayed
+    const baseYear = '2011';
+    
+    // Filter out the base year from display
+    const displayYears = sortedYears.filter(year => year !== baseYear);
+  
+    // Create table header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.className = 'bg-light';
+  
+    // Add first column for method names
+    const methodHeader = document.createElement('th');
+    methodHeader.textContent = 'Projection Method';
+    methodHeader.style.position = 'sticky';
+    methodHeader.style.left = '0';
+    methodHeader.style.backgroundColor = '#f8f9fa';
+    methodHeader.style.zIndex = '1';
+    headerRow.appendChild(methodHeader);
+  
+    // Add year columns (excluding base year)
+    displayYears.forEach(year => {
+        const yearHeader = document.createElement('th');
+        yearHeader.textContent = year;
+        headerRow.appendChild(yearHeader);
+    });
+  
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+  
+    // Create table body
+    const tbody = document.createElement('tbody');
+  
+    // Add rows for each projection method
+    Object.entries(summedList).forEach(([method, yearData]) => {
+        const row = document.createElement('tr');
+  
+        // Add method name as first column
+        const methodCell = document.createElement('td');
+        methodCell.textContent = method;
+        methodCell.className = 'fw-bold';
+        methodCell.style.position = 'sticky';
+        methodCell.style.left = '0';
+        methodCell.style.backgroundColor = '#ffffff';
+        methodCell.style.zIndex = '1';
+        row.appendChild(methodCell);
+  
+        // Get the base year value for growth calculation
+        const baseValue = yearData[baseYear];
+  
+        // Add growth percentage data for each year (excluding base year)
+        displayYears.forEach(year => {
+            const dataCell = document.createElement('td');
+  
+            if (yearData[year] !== undefined && baseValue !== undefined) {
+                const growth = ((yearData[year] - baseValue) / baseValue * 100).toFixed(2);
+                dataCell.textContent = `${growth}%`;
+            } else {
+                dataCell.textContent = '-';
+            }
+  
+            row.appendChild(dataCell);
+        });
+  
+        tbody.appendChild(row);
+    });
+  
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
+    resultsContainer.appendChild(tableContainer);
+  
+    // Show results section
+    resultsSection.style.display = 'block';
   }
-
-  // Create a responsive table container
-  const tableContainer = document.createElement('div');
-  tableContainer.className = 'table-responsive';
-  tableContainer.style.maxWidth = '100%';
-  tableContainer.style.overflowX = 'auto';
-
-  // Create table
-  const table = document.createElement('table');
-  table.className = 'table table-bordered table-hover';
-
-  // Extract all unique years
-  let allYears = new Set();
-  Object.values(summedList).forEach(yearData => {
-      Object.keys(yearData).forEach(year => allYears.add(year));
-  });
-
-  // Sort years in ascending order
-  const sortedYears = [...allYears].sort((a, b) => a - b);
-
-  // Create table header
-  const thead = document.createElement('thead');
-  const headerRow = document.createElement('tr');
-  headerRow.className = 'bg-light';
-
-  // Add first column for method names
-  const methodHeader = document.createElement('th');
-  methodHeader.textContent = 'Projection Method';
-  methodHeader.style.position = 'sticky';
-  methodHeader.style.left = '0';
-  methodHeader.style.backgroundColor = '#f8f9fa';
-  methodHeader.style.zIndex = '1';
-  headerRow.appendChild(methodHeader);
-
-  // Add year columns
-  sortedYears.forEach(year => {
-      const yearHeader = document.createElement('th');
-      yearHeader.textContent = year;
-      headerRow.appendChild(yearHeader);
-  });
-
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  // Create table body
-  const tbody = document.createElement('tbody');
-
-  // Add rows for each projection method
-  Object.entries(summedList).forEach(([method, yearData]) => {
-      const row = document.createElement('tr');
-
-      // Add method name as first column
-      const methodCell = document.createElement('td');
-      methodCell.textContent = method;
-      methodCell.className = 'fw-bold';
-      methodCell.style.position = 'sticky';
-      methodCell.style.left = '0';
-      methodCell.style.backgroundColor = '#ffffff';
-      methodCell.style.zIndex = '1';
-      row.appendChild(methodCell);
-
-      // Get the base year (2011) value for growth calculation
-      const baseYear = '2011';
-      const baseValue = yearData[baseYear];
-
-      // Add growth percentage data for each year
-      sortedYears.forEach(year => {
-          const dataCell = document.createElement('td');
-
-          if (year === baseYear) {
-              dataCell.textContent = 'Base Year';
-          } else if (yearData[year] !== undefined && baseValue !== undefined) {
-              const growth = ((yearData[year] - baseValue) / baseValue * 100).toFixed(2);
-              dataCell.textContent = `${growth}%`;
-          } else {
-              dataCell.textContent = '-';
-          }
-
-          row.appendChild(dataCell);
-      });
-
-      tbody.appendChild(row);
-  });
-
-  table.appendChild(tbody);
-  tableContainer.appendChild(table);
-  resultsContainer.appendChild(tableContainer);
-
-  // Show results section
-  resultsSection.style.display = 'block';
-}
 
 
   let alertShown = false;
@@ -1107,19 +1110,6 @@ function displayGrowthTable(summedList) {
       }
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

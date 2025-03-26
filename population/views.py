@@ -518,8 +518,8 @@ def project_population_demographic(state_code, district_code, subdistrict_code, 
             one_year[target_year] = math.floor((population_of_target_year))
            
 
+            result['demographic-attribute'][key] = one_year
             
-            res[key] = one_year
 
     elif target_year_range:
         # For a range of target years
@@ -533,9 +533,9 @@ def project_population_demographic(state_code, district_code, subdistrict_code, 
                 t = x - base_year
                 population_of_target_year_range = value + (value * t * (annual_birth_rate-annual_death_rate)) + (t * (annual_emigration_rate - annual_immigration_rate))
                 year_wise_population[x] = int(population_of_target_year_range)
-            res[key] = year_wise_population  # Assign year-wise populations to the village
+            
+            result['demographic-attribute'][key] = year_wise_population
     
-    result['demographic-attribute'] = res
     
 
 
