@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let subdistrictNames = {}; // Store subdistrict names with code for each district 
   let code_to_villagename = {};
   let code_to_villagepopulation_2011= {} 
+  let code_to_villagefloating_pop = {};
   let villageToDistrict = {}; // {villageCode: districtCode}
   let villageToSubdistrict = {}; // {villageCode: subdistrictCode}
 
@@ -153,6 +154,7 @@ function fetchVillages() {
             villages.forEach(d => {
               code_to_villagename[d.village_code] = d.region_name;
               code_to_villagepopulation_2011[d.village_code] = d.population_2011;
+              code_to_villagefloating_pop[d.village_code] = d.floating_pop;
             });
           
               const subdistrictPopulationSum = villages
@@ -276,8 +278,10 @@ function fetchVillages() {
 
   // Update selected villages display
   function updateSelectedVillages() {
+    console.log("updateSelectedVillages called");
     selectedVillagesContainer.innerHTML = ""; // Clear previous selections
     let totalPopulation = 0;
+    let totalFloatingPopulation = 0;
 
     persistentSelections.villages = {}; // Reset persistentSelections
     persistentSelections.totalPopulation = 0;
@@ -307,6 +311,9 @@ function fetchVillages() {
     selectedVillages.forEach(villageCode => { 
         let villageName = code_to_villagename[villageCode] || `Village ${villageCode}`;
         let villagePopulation = parseInt(code_to_villagepopulation_2011[villageCode] || "0", 10);
+
+        // NEW: Get floating population for this village
+        let villageFloating = parseInt(code_to_villagefloating_pop[villageCode] || "0", 10);
 
         // Retrieve district and subdistrict details
         let districtCode = villageToDistrict[villageCode] || "";
@@ -340,6 +347,7 @@ function fetchVillages() {
         tbody.appendChild(row);
 
         totalPopulation += villagePopulation;
+        totalFloatingPopulation += villageFloating; // NEW addition
     });
 
     table.appendChild(tbody);
@@ -354,6 +362,13 @@ function fetchVillages() {
 
     // Update persistentSelections total population
     persistentSelections.totalPopulation = totalPopulation;
+
+    // NEW: Auto-populate the Floating Population (2011) field with the summed value
+    console.log('Total floating population:', totalFloatingPopulation);
+    let floatingField = document.getElementById("floating_field");
+    if (floatingField) {
+        floatingField.value = totalFloatingPopulation;
+    }
 }
 
 

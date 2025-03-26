@@ -641,7 +641,8 @@ def get_villages(request, state_code, district_code, subdistrict_code):
                 "subdistrict_code": loc.subdistrict_code,
                 "village_code": loc.village_code,
                 "region_name": loc.region_name,
-                "population_2011": loc.population_2011
+                "population_2011": loc.population_2011,
+                "floating_pop": loc.floating_pop
             }
             for loc in locations
         ]
@@ -671,7 +672,8 @@ def get_villages(request, state_code, district_code, subdistrict_code):
                 "subdistrict_code":loc.subdistrict_code,
                 "village_code": loc.village_code,
                 "region_name": " All " if loc.village_code == 0 else loc.region_name,
-                "population_2011": loc.population_2011
+                "population_2011": loc.population_2011,
+                "floating_pop": loc.floating_pop
             }   
             for loc in locations
         ]

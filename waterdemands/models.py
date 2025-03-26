@@ -7,6 +7,7 @@ class PopulationData(models.Model):
     village_code = models.IntegerField()
     region_name = models.CharField(max_length=255)
     population_2011 = models.BigIntegerField(null=True, blank=True)
+    floating_pop = models.BigIntegerField(null=True, blank=True)
 
     class Meta:
         db_table = 'population_data'
