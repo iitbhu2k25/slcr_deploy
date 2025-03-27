@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from waterdemands.models import PopulationData, PopulationDataYear, FloatingData
+from population.models import PopulationData, PopulationDataYear, FloatingData
 
 def main_page(request):
     return render(request, 'watersupply/main.html')

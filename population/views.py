@@ -4,7 +4,7 @@ import os
 import csv,json,math
 import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
-from waterdemands.models import PopulationData,PopulationDataYear
+from .models import PopulationData,PopulationDataYear
 from django.db.models import Q
 
 

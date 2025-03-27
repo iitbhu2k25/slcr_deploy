@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import PopulationData, PopulationDataYear , FloatingData
+from population.models import PopulationData, PopulationDataYear 
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.db.models import Sum
