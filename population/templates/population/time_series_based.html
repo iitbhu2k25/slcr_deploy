@@ -733,10 +733,13 @@
     <h3 class="text-center mb-4" style="color: #009900;">Water Supply Calculation</h3>
     <p>Enter water supply related data below:</p>
     <!-- Navigation Button -->
-    <button id="prev-to-demand-btn" type="button" class="btn btn-secondary mb-3">Previous Stage: Water Demand</button>
+    <button id="prev-to-demand-btn" type="button" class="btn btn-secondary mb-3">Previous Stage: Water Demand</button><br>
     <!-- Water Supply Input Fields -->
     <!-- Surface Water Supply (SWS) -->
-    <h5>Surface Water Supply (SWS)</h5>
+    <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Surface Water Supply (SWS)</b>
+    </h6>
     <div class="border rounded p-3 mb-3"
       style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
       <div class="col-md-4">
@@ -746,7 +749,10 @@
     </div>
 
     <!-- Groundwater Supply (GWS) -->
-    <h5>Groundwater Supply (GWS)</h5>
+    <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Groundwater Supply (GWS)</b>
+    </h6>
     <div class="border rounded p-3 mb-3"
       style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
       <div class="row mb-3">
@@ -773,7 +779,10 @@
     </div>
 
     <!-- Alternate Water Supply (AWS) -->
-    <h5>Alternate Water Supply (AWS)</h5>
+    <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Alternate Water Supply (AWS)</b>
+    </h6>
     <div class="border rounded p-3 mb-3"
       style="border: var(--bs-border-width) var(--bs-border-style) #a7afb7 !important;">
       <div class="row mb-3">
@@ -884,8 +893,8 @@
           <label for="harmon">Harmon’s Method</label>
         </div>
         <div>
-          <input type="checkbox" id="babbitt" name="peak_flow" value="babbitt">
-          <label for="babbitt">Babbitt’s Method</label>
+          <input type="checkbox" id="babbit" name="peak_flow" value="babbit">
+          <label for="babbit">Babbit’s Method</label>
         </div>
       </div>
       <button id="calculate-peak-flow" class="btn btn-dark">Calculate Peak Sewage Flow</button>
@@ -1845,7 +1854,7 @@
       return 1 + 14 / (4 + Math.sqrt(pop / 1000));
     }
 
-    // Babbitt’s method
+    // Babbit’s method
     function getBabbittFactor(pop) {
       return 5 / Math.pow(pop / 1000, 0.2);
     }
@@ -1866,7 +1875,7 @@
       const methodsSelected = [];
       if (document.getElementById('cpheeo').checked) methodsSelected.push('cpheeo');
       if (document.getElementById('harmon').checked) methodsSelected.push('harmon');
-      if (document.getElementById('babbitt').checked) methodsSelected.push('babbitt');
+      if (document.getElementById('babbit').checked) methodsSelected.push('babbit');
 
       // If none selected, show a message
       if (methodsSelected.length === 0) {
@@ -1891,8 +1900,8 @@
       if (methodsSelected.includes('harmon')) {
         tableHTML += `<th>Harmon's Peak (MLD)</th>`;
       }
-      if (methodsSelected.includes('babbitt')) {
-        tableHTML += `<th>Babbitt's Peak (MLD)</th>`;
+      if (methodsSelected.includes('babbit')) {
+        tableHTML += `<th>Babbit's Peak (MLD)</th>`;
       }
 
       tableHTML += `</tr></thead><tbody>`;
@@ -1923,8 +1932,8 @@
           tableHTML += `<td>${peakHarmon.toFixed(2)}</td>`;
         }
 
-        // Babbitt
-        if (methodsSelected.includes('babbitt')) {
+        // Babbit
+        if (methodsSelected.includes('babbit')) {
           const factorBabbitt = getBabbittFactor(popVal);
           const peakBabbitt = avgSewFlow * factorBabbitt;
           tableHTML += `<td>${peakBabbitt.toFixed(2)}</td>`;
