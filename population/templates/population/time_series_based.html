@@ -470,6 +470,18 @@
         <label for="firefighting">Firefighting</label>
       </div>
     </div>
+
+    <!-- New: Per Capita Consumption input (hidden by default) -->
+    <div id="domestic-consumption-container" class="box hidden mb-3">
+      <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+          onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Domestic Fields</b>
+      </h6>
+      <br>
+      <label for="per_capita_consumption" class="form-label">Per Capita Consumption (L/person/day):</label>
+      <input type="number" id="per_capita_consumption" name="per_capita_consumption" value="135" class="form-control" placeholder="Enter per capita consumption" style="max-width:150px;">
+    </div>
+
     <!-- Floating Fields (Hidden by default) -->
     <div class="box floating-fields-container mb-3 hidden">
       <h6 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
@@ -854,6 +866,33 @@
     <button id="calculate-sewage" type="button" class="btn btn-dark mt-3">Calculate Sewage</button>
     <div id="sewage-result" class="mt-3" style="font-weight: bold;"></div>
 
+    <!-- Initially hidden, will be shown after sewage calculation -->
+    <div id="peak-flow-section" class="hidden" style="margin-top: 20px;">
+      <h5 style="display: inline; color: #007BFF; font-weight: bold; cursor: pointer; transition: color 0.3s ease;"
+        onmouseover="this.style.color='#0056b3'" onmouseout="this.style.color='#007BFF'">
+        <b>Peak Sewage Flow Calculation</b>
+      </h5>
+  
+      <div class="form-group mb-3">
+        <label>Peak Sewage Flow Methods:</label>
+        <div>
+          <input type="checkbox" id="cpheeo" name="peak_flow" value="cpheeo">
+          <label for="cpheeo">CPHEEO Method</label>
+        </div>
+        <div>
+          <input type="checkbox" id="harmon" name="peak_flow" value="harmon">
+          <label for="harmon">Harmon’s Method</label>
+        </div>
+        <div>
+          <input type="checkbox" id="babbitt" name="peak_flow" value="babbitt">
+          <label for="babbitt">Babbitt’s Method</label>
+        </div>
+      </div>
+      <button id="calculate-peak-flow" class="btn btn-dark">Calculate Peak Sewage Flow</button>
+      <div id="peak-flow-result" class="mt-3" style="font-weight:bold;"></div>
+    </div>
+
+
     <!-- New Button: Raw Sewage Characteristics -->
     <button id="raw-sewage-btn" type="button" class="btn btn-info mt-3">Raw Sewage Characteristics</button>
     <!-- Container for Pollution Load Table -->
@@ -1094,6 +1133,15 @@
 
 
     // Toggle extra water demand fields when corresponding checkbox is changed
+    document.getElementById('domestic').addEventListener('change', function() {
+      const container = document.getElementById('domestic-consumption-container');
+      if (this.checked) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    });
+
     document.getElementById('floating').addEventListener('change', function () {
       const container = document.querySelector('.floating-fields-container');
       if (this.checked) {
@@ -1220,9 +1268,10 @@
       let radioGroupHTML = `<div class="mt-3"><p>Select a Firefighting Method to apply for all years:</p>`;
       selectedMethods.forEach((method, index) => {
         const checkedAttr = (index === 0) ? "checked" : "";
+        const capitalizedMethod = method.charAt(0).toUpperCase() + method.slice(1).toLowerCase();
         radioGroupHTML += `<div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="firefighting_method_choice" value="${method}" ${checkedAttr}>
-            <label class="form-check-label">${method}</label>
+            <label class="form-check-label">${capitalizedMethod}</label>
           </div>`;
       });
       radioGroupHTML += `</div>`;
@@ -1372,18 +1421,16 @@
           let totalDemand = 0;
           // Domestic Water Demand: use multiplier based on popValue.
           if (domesticChecked) {
-            let domesticMultiplier;
-            if (popValue > 1000000) {
-              domesticMultiplier = 150 / 1000000;
-            } else if (popValue < 100000) {
-              domesticMultiplier = 135 / 1000000;
-            } else {
-              domesticMultiplier = 135 / 1000000;
-            }
+          // Read the per capita consumption value entered by the user; default to 135 if empty or invalid.
+            let perCapita = parseFloat(document.getElementById('per_capita_consumption').value) || 135;
+            // Calculate the multiplier (liters per person per day divided by 1,000,000)
+            let domesticMultiplier = perCapita / 1000000;
+            // Calculate domestic water demand for the given population value
             let domesticDemand = popValue * domesticMultiplier;
             totalDemand += domesticDemand;
             outputHTML += `<td>${domesticDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
           }
+
           // Floating Water Demand: scale 2011 floating population by (popValue / basePopulation)
           if (floatingChecked) {
             let scaledFloating = floatingPopulation2011 * (popValue / basePopulation);
@@ -1424,14 +1471,8 @@
         outputHTML += `<tr><td>Single Year</td><td>${popValue.toLocaleString()}</td>`;
         let totalDemand = 0;
         if (domesticChecked) {
-          let domesticMultiplier;
-          if (popValue > 1000000) {
-            domesticMultiplier = 150 / 1000000;
-          } else if (popValue > 100000) {
-            domesticMultiplier = 135 / 1000000;
-          } else {
-            domesticMultiplier = 135;
-          }
+          let perCapita = parseFloat(document.getElementById('per_capita_consumption').value) || 135;
+          let domesticMultiplier = perCapita / 1000000;
           let domesticDemand = popValue * domesticMultiplier;
           totalDemand += domesticDemand;
           outputHTML += `<td>${domesticDemand.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>`;
@@ -1694,6 +1735,10 @@
         }
         const sewageDemand = totalSupply * 0.84;
         result.innerHTML = `Total Generated Sewage Water is: ${sewageDemand.toFixed(2)} MLD`;
+
+        window.sewageResults = {};
+        window.sewageResults[2025] = sewageDemand;
+        document.getElementById('peak-flow-section').classList.remove('hidden');
       }
 
       // 2) Domestic Sewage approach
@@ -1713,12 +1758,19 @@
           }
           const sewageDemand = domesticVal * 0.84;
           result.innerHTML = `Total Generated Sewage Water is: ${sewageDemand.toFixed(2)} MLD`;
+          // Store in window.sewageResults:
+          window.sewageResults = {};
+          window.sewageResults[2025] = sewageDemand; // or whichever year
+
+          // Unhide Peak Flow
+          document.getElementById('peak-flow-section').classList.remove('hidden');
         }
 
         // 2b) Modeled
         else if (sectorMethod === "modeled") {
           // Optionally read "unmetered_supply_input" if needed
           const unmeteredVal = parseFloat(document.getElementById('unmetered_supply_input').value) || 0;
+          window.sewageResults = {};
 
           // Must have computedPopulation
           if (typeof computedPopulation === 'undefined') {
@@ -1745,6 +1797,7 @@
                 <td>${popVal.toLocaleString()}</td>
                 <td>${sewageGen.toFixed(2)}</td>
               </tr>`;
+              window.sewageResults[yr] = sewageGen;
             }
           }
           // If single-year
@@ -1757,12 +1810,138 @@
               <td>${popVal.toLocaleString()}</td>
               <td>${sewageGen.toFixed(2)}</td>
             </tr>`;
+            window.sewageResults[yr] = sewageGen;
           }
           outputHTML += `</tbody></table> </div>`;
           result.innerHTML = outputHTML;
+          document.getElementById('peak-flow-section').classList.remove('hidden');
         }
       }
     });
+
+    /*******************************************
+     * 1) Define your peak factor formulas
+     *******************************************/
+
+    // CPHEEO method uses a table-based factor
+    function getCPHEEOFactor(pop) {
+      // You can expand these ranges as per CPHEEO guidelines:
+      if (pop < 20000) {
+        return 3.0;
+      } else if (pop < 50000) {
+        return 2.5;
+      } else if (pop < 75000) {
+        return 2.0;
+      } else if (pop < 100000) {
+        return 1.75;
+      } else {
+        // For populations above 100k, you can use 1.5 or the next factor recommended.
+        return 1.5;
+      }
+    }
+
+    // Harmon’s method
+    //   Commonly: Peak Factor = 1 + 14 / (4 + sqrt(pop/1000))
+    function getHarmonFactor(pop) {
+      return 1 + 14 / (4 + Math.sqrt(pop / 1000));
+    }
+
+    // Babbitt’s method
+    //   One common variant: Peak Factor = 1 + (5 / sqrt(pop/1000))
+    function getBabbittFactor(pop) {
+      return 1 + 5 / Math.sqrt(pop / 1000);
+    }
+
+    /*******************************************
+     * 2) Listen for button click
+     *******************************************/
+
+    document.getElementById('calculate-peak-flow').addEventListener('click', function() {
+      // 2a. Make sure we have data from the previous steps
+      if (!window.computedPopulation || !window.sewageResults) {
+        document.getElementById('peak-flow-result').innerHTML = 
+          "Error: Population or sewage data not found. Please do those calculations first.";
+        return;
+      }
+
+      // 2b. Gather which methods are checked
+      const methodsSelected = [];
+      if (document.getElementById('cpheeo').checked) methodsSelected.push('cpheeo');
+      if (document.getElementById('harmon').checked) methodsSelected.push('harmon');
+      if (document.getElementById('babbitt').checked) methodsSelected.push('babbitt');
+
+      // If none selected, show a message
+      if (methodsSelected.length === 0) {
+        document.getElementById('peak-flow-result').innerHTML = 
+          "Please select at least one method to calculate Peak Sewage Flow.";
+        return;
+      }
+
+      // 2c. Build an HTML table with columns for each checked method
+      let tableHTML = `
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Population</th>
+                <th>Avg Sewage Flow (Q<sub>a</sub>, MLD)</th>`;
+
+      if (methodsSelected.includes('cpheeo')) {
+        tableHTML += `<th>CPHEEO Peak (MLD)</th>`;
+      }
+      if (methodsSelected.includes('harmon')) {
+        tableHTML += `<th>Harmon's Peak (MLD)</th>`;
+      }
+      if (methodsSelected.includes('babbitt')) {
+        tableHTML += `<th>Babbitt's Peak (MLD)</th>`;
+      }
+
+      tableHTML += `</tr></thead><tbody>`;
+
+      // 2d. Loop over each year in your sewage results
+      for (let yr in window.sewageResults) {
+        const popVal = Number(window.computedPopulation[yr]) || 0;
+        const avgSewFlow = Number(window.sewageResults[yr]) || 0;
+
+        tableHTML += `
+          <tr>
+            <td>${yr}</td>
+            <td>${popVal.toLocaleString()}</td>
+            <td>${avgSewFlow.toFixed(2)}</td>
+        `;
+
+        // CPHEEO
+        if (methodsSelected.includes('cpheeo')) {
+          const factorCPHEEO = getCPHEEOFactor(popVal);
+          const peakCPHEEO = avgSewFlow * factorCPHEEO;
+          tableHTML += `<td>${peakCPHEEO.toFixed(2)}</td>`;
+        }
+
+        // Harmon
+        if (methodsSelected.includes('harmon')) {
+          const factorHarmon = getHarmonFactor(popVal);
+          const peakHarmon = avgSewFlow * factorHarmon;
+          tableHTML += `<td>${peakHarmon.toFixed(2)}</td>`;
+        }
+
+        // Babbitt
+        if (methodsSelected.includes('babbitt')) {
+          const factorBabbitt = getBabbittFactor(popVal);
+          const peakBabbitt = avgSewFlow * factorBabbitt;
+          tableHTML += `<td>${peakBabbitt.toFixed(2)}</td>`;
+        }
+
+        tableHTML += `</tr>`;
+      }
+
+      tableHTML += `</tbody></table></div>`;
+
+      // 2e. Display the table in the peak-flow-result container
+      document.getElementById('peak-flow-result').innerHTML = tableHTML;
+    });
+
+
     // Raw Sewage Characteristics Handler – triggered by the new button
     document.getElementById('raw-sewage-btn').addEventListener('click', function (event) {
       event.preventDefault();
@@ -2111,7 +2290,20 @@
       }
       y += 5;
 
-      // 8. Pollution Load Table
+      // 8. Peak Sewage Flow Results
+      addSectionTitle("Peak Sewage Flow Results:");
+      const peakFlowElem = document.getElementById("peak-flow-result");
+      if (peakFlowElem && peakFlowElem.innerText.trim() !== "") {
+        const peakFlowTable = peakFlowElem.querySelector("table");
+        if (peakFlowTable) {
+          addTableFromElement(peakFlowTable, false);
+        } else {
+          addParagraph(peakFlowElem.innerText);
+        }
+      }
+      y += 5;
+
+      // 9. Pollution Load Table
       // Inside your download-pdf-btn click handler, when adding the pollution load table:
       addSectionTitle("Raw Sewage Charateristics:");
       const pollutionElem = document.getElementById("pollution-load-container");
