@@ -1828,14 +1828,13 @@
       // You can expand these ranges as per CPHEEO guidelines:
       if (pop < 20000) {
         return 3.0;
-      } else if (pop < 50000) {
+      } else if (20000 <= pop < 50000) {
         return 2.5;
-      } else if (pop < 75000) {
-        return 2.0;
-      } else if (pop < 100000) {
-        return 1.75;
+      } else if (50000 <= pop < 75000) {
+        return 2.25;
+      } else if (pop >= 75000) {
+        return 2;
       } else {
-        // For populations above 100k, you can use 1.5 or the next factor recommended.
         return 1.5;
       }
     }
@@ -1847,9 +1846,8 @@
     }
 
     // Babbitt’s method
-    //   One common variant: Peak Factor = 1 + (5 / sqrt(pop/1000))
     function getBabbittFactor(pop) {
-      return 1 + 5 / Math.sqrt(pop / 1000);
+      return 5 / Math.pow(pop / 1000, 0.2);
     }
 
     /*******************************************
